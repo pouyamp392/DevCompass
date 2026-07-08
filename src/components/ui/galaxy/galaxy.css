@@ -1,0 +1,182 @@
+.star {
+
+    position: absolute;
+
+    border-radius: 999px;
+
+    background: white;
+
+    opacity: .8;
+
+    animation: twinkle infinite ease-in-out;
+
+    box-shadow:
+        0 0 4px white,
+        0 0 8px #8be9fd;
+
+}
+
+@keyframes twinkle {
+
+    0% {
+
+        opacity: .2;
+        transform: scale(.8);
+
+    }
+
+    50% {
+
+        opacity: 1;
+        transform: scale(1.4);
+
+    }
+
+    100% {
+
+        opacity: .2;
+        transform: scale(.8);
+
+    }
+
+}
+
+.nebula {
+
+    position: absolute;
+
+    border-radius: 9999px;
+
+    filter: blur(120px);
+
+    opacity: .35;
+
+    animation: floatNebula 25s ease-in-out infinite;
+
+}
+
+.nebula-1{
+
+    width: 600px;
+    height: 600px;
+
+    background: #00bfff;
+
+    top: -150px;
+    left: -150px;
+
+}
+
+.nebula-2{
+
+    width: 500px;
+    height: 500px;
+
+    background: #3b82f6;
+
+    bottom: -120px;
+    right: -120px;
+
+    animation-delay: 8s;
+
+}
+
+.nebula-3{
+
+    width: 400px;
+    height: 400px;
+
+    background: #38bdf8;
+
+    top: 40%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    animation-delay: 15s;
+
+}
+
+@keyframes floatNebula {
+
+    0%{
+
+        transform: translate(0,0) scale(1);
+
+    }
+
+    50%{
+
+        transform: translate(40px,-30px) scale(1.1);
+
+    }
+
+    100%{
+
+        transform: translate(0,0) scale(1);
+
+    }
+
+}
+
+
+.meteor {
+
+    position: absolute;
+
+    width: 220px;
+
+    height: 2px;
+
+    background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0),
+        rgba(255,255,255,.9),
+        rgba(0,229,255,.6)
+    );
+
+    transform: rotate(-35deg);
+
+    opacity: 0;
+
+    filter: drop-shadow(0 0 10px cyan);
+
+    animation: meteor 12s linear infinite;
+
+}
+
+@keyframes meteor {
+
+    0%{
+
+        transform:
+            translate(0,0)
+            rotate(-35deg);
+
+        opacity:0;
+
+    }
+
+    5%{
+
+        opacity:1;
+
+    }
+
+    20%{
+
+        transform:
+            translate(-700px,700px)
+            rotate(-35deg);
+
+        opacity:0;
+
+    }
+
+    100%{
+
+        opacity:0;
+
+    }
+
+}
