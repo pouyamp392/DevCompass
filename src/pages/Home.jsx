@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import GalaxyBackground from "../components/ui/galaxy/GalaxyBackground";
+
+import Hero from "../components/ui/Hero";
 
 export default function Home() {
     return (
-        <GalaxyBackground />
+        <Hero />
     );
 }
