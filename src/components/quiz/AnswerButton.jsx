@@ -9,12 +9,16 @@ export default function AnswerButton({
         <button
             onClick={onClick}
             className={`
-                w-full
-                text-right
-                p-5
-                rounded-2xl
-                border
-                transition
+group
+w-full
+p-6
+rounded-3xl
+bg-white/[0.03]
+border border-white/10
+hover:border-cyan-400/40
+hover:bg-cyan-500/[0.06]
+transition-all
+duration-300
 
                 ${
                     selected
