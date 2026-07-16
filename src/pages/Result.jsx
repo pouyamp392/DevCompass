@@ -64,7 +64,7 @@ export default function Result() {
 
         setRoadmap(roadmap);
 
-        navigate("/roadmap");
+        navigate("/dashboard");
 
     }
 
