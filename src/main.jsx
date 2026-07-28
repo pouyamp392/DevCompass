@@ -6,11 +6,11 @@ import "./index.css";
 import { QuizProvider } from "./context/QuizContext";
 ReactDOM.createRoot(document.getElementById("root")).render(
     <QuizProvider>
-        <React.StrictMode>
+        {/* <React.StrictMode> */}
             <BrowserRouter>
                 <App />
             </BrowserRouter>
-        </React.StrictMode>
+        {/* </React.StrictMode> */}
     </QuizProvider>
 
 );

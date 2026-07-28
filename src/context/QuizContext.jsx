@@ -6,12 +6,22 @@ export function QuizProvider({ children }) {
 
     const [result, setResult] = useState([]);
 
+    const [roadmap, setRoadmap] = useState([]);
+
+    const [progress, setProgress] = useState({});
+
     return (
 
         <QuizContext.Provider
             value={{
                 result,
-                setResult
+                setResult,
+
+                roadmap,
+                setRoadmap,
+
+                progress,
+                setProgress,
             }}
         >
 

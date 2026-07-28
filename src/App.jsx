@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import Quiz from "./pages/Quiz";
 import Result from "./pages/Result";
 import Roadmap from "./pages/Roadmap";
+import Skill from "./pages/Skill";
 
 export default function App() {
     return (
@@ -15,6 +16,8 @@ export default function App() {
             <Route path="/result" element={<Result />} />
 
             <Route path="/roadmap" element={<Roadmap />} />
+
+            <Route path="/skill/:id" element={<Skill />} />
 
         </Routes>
     );
