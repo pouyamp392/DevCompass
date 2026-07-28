@@ -1,57 +1,31 @@
+// galaxy/CameraRig.jsx
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import * as THREE from "three";
 
 export default function CameraRig() {
+    const mouse = useRef({ x: 0, y: 0 });
+    const smooth = useRef({ x: 0, y: 0 });
 
+    if (typeof window !== "undefined") {
+        window.onmousemove = (e) => {
+            mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        };
+    }
 
-const mouse = useRef({
-    x: 0,
-    y: 0
-});
+    useFrame(({ camera, clock }) => {
+        const t = clock.getElapsedTime();
 
-window.onmousemove = (e) => {
+        smooth.current.x += (mouse.current.x - smooth.current.x) * 0.01;
+        smooth.current.y += (mouse.current.y - smooth.current.y) * 0.01;
 
-    mouse.current.x =
-        (e.clientX / window.innerWidth) * 2 - 1;
+        const drift = Math.sin(t * 0.02) * 0.25;
 
-    mouse.current.y =
-        -(e.clientY / window.innerHeight) * 2 + 1;
-};
+        camera.position.x = smooth.current.x * 0.25 + drift;
+        camera.position.y = smooth.current.y * 0.15;
 
-useFrame(({ camera, clock }) => {
+        camera.lookAt(0, 0, 0);
+    });
 
-    const t = clock.getElapsedTime();
-
-    camera.position.x = THREE.MathUtils.lerp(
-
-        camera.position.x,
-
-        mouse.current.x * 2,
-
-        0.02
-
-    );
-
-    camera.position.y = THREE.MathUtils.lerp(
-
-        camera.position.y,
-
-        mouse.current.y * 1.2,
-
-        0.02
-
-    );
-
-    camera.position.z =
-        10 +
-        Math.sin(t * 0.15) * 0.5;
-
-    camera.lookAt(0,0,0);
-
-});
-
-return null;
-
-
+    return null;
 }

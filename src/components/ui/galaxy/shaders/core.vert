@@ -1,12 +1,27 @@
-varying vec2 vUv;
+attribute float aSize;
+attribute float aSpeed;
+attribute float aPhase;
 
-void main(){
+uniform float uTime;
 
-    vUv = uv;
+varying vec3 vColor;
 
-    gl_Position =
-        projectionMatrix *
-        modelViewMatrix *
-        vec4(position,1.0);
+void main() {
+    vColor = color;
 
+    vec3 pos = position;
+    
+    // حرکت نوسانی بسیار آروم
+    float wave = sin(uTime * aSpeed * 0.1 + aPhase) * 0.2;
+    pos.y += wave * 0.1;
+
+    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+
+    gl_PointSize = clamp(
+        aSize * (300.0 / -mvPosition.z),
+        0.5,
+        8.0
+    );
+
+    gl_Position = projectionMatrix * mvPosition;
 }
