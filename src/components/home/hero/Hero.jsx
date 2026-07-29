@@ -2,27 +2,13 @@
 import { Link } from "react-router-dom";
 import Scene from "../../ui/Scene";
 import CompassSVG from "./CompassSVG";
-import FeatureCard from "./FeatureCard";
 import HeroBadge from "./HeroBadge";
 import HeroTitle from "./HeroTitle";
 import HeroDescription from "./HeroDescription";
 import HeroCTA from "./HeroCTA";
 import HeroStats from "./HeroStats";
 
-const features = [
-    {
-        title: "تحلیل علاقه و مهارت",
-        description: "شناخت دقیق‌تر توانایی‌ها و علایق تو",
-    },
-    {
-        title: "نقشه یادگیری شخصی",
-        description: "مسیری مرحله‌به‌مرحله و متناسب با هدفت",
-    },
-    {
-        title: "هماهنگ با بازار کار",
-        description: "انتخاب حوزه‌ها و مهارت‌های کاربردی‌تر",
-    },
-];
+
 
 export default function Hero() {
     return (
@@ -72,12 +58,7 @@ export default function Hero() {
                         <HeroCTA />
                         <HeroStats />
 
-                        {/* ویژگی‌ها */}
-                        <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                            {features.map((feature) => (
-                                <FeatureCard key={feature.title} {...feature} />
-                            ))}
-                        </div>
+
                     </div>
 
                     {/* قطب‌نما */}

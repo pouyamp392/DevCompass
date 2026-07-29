@@ -1,80 +1,123 @@
 import { useId } from "react";
 
+// ---------------------------------------------------------------
+// مسیرهای برنامه‌نویسی با هویت بصری مجزا
+// ---------------------------------------------------------------
 const PROGRAMMING_PATHS = [
-  { label: "Frontend", angle: -Math.PI / 2 + 0.28, color: "#67e8f9", size: 5.2, glow: 0.9  },
-  { label: "Backend",  angle: -Math.PI / 2 + 1.08, color: "#3b82f6", size: 5.0, glow: 0.85 },
-  { label: "AI",       angle: -Math.PI / 2 + 1.88, color: "#a78bfa", size: 6.6, glow: 1.15 },
-  { label: "GameDev",  angle: -Math.PI / 2 + 2.68, color: "#f472b6", size: 4.9, glow: 0.8  },
-  { label: "DevOps",   angle: -Math.PI / 2 - 2.38, color: "#4ade80", size: 4.8, glow: 0.78 },
-  { label: "Cloud",    angle: -Math.PI / 2 - 1.58, color: "#7dd3fc", size: 5.0, glow: 0.82 },
-  { label: "Mobile",   angle: -Math.PI / 2 - 0.78, color: "#2dd4bf", size: 4.8, glow: 0.78 },
-  { label: "Data",     angle: -Math.PI / 2 - 0.08, color: "#fb923c", size: 5.0, glow: 0.82 },
+  { label: "Frontend", shortLabel: "FE", angle: -Math.PI / 2 + 0.25, color: "#67e8f9", size: 5.2, importance: 0.86 },
+  { label: "Backend", shortLabel: "BE", angle: -Math.PI / 2 + 1.03, color: "#60a5fa", size: 5.1, importance: 0.84 },
+  { label: "AI", shortLabel: "AI", angle: -Math.PI / 2 + 1.82, color: "#a78bfa", size: 6.8, importance: 1 },
+  { label: "GameDev", shortLabel: "GAME", angle: -Math.PI / 2 + 2.6, color: "#818cf8", size: 4.6, importance: 0.68 },
+  { label: "DevOps", shortLabel: "OPS", angle: -Math.PI / 2 - 2.4, color: "#38bdf8", size: 4.8, importance: 0.72 },
+  { label: "Cloud", shortLabel: "CLD", angle: -Math.PI / 2 - 1.62, color: "#7dd3fc", size: 4.7, importance: 0.7 },
+  { label: "Mobile", shortLabel: "MOB", angle: -Math.PI / 2 - 0.84, color: "#60a5fa", size: 4.6, importance: 0.68 },
+  { label: "Data", shortLabel: "DATA", angle: -Math.PI / 2 - 0.06, color: "#818cf8", size: 4.9, importance: 0.76 },
+];
+
+const DEGREE_MARKS = Array.from({ length: 36 });
+
+const DIRECTIONS = [
+  { label: "N", angle: -Math.PI / 2, color: "#e0f2fe" },
+  { label: "E", angle: 0, color: "#67e8f9" },
+  { label: "S", angle: Math.PI / 2, color: "#60a5fa" },
+  { label: "W", angle: Math.PI, color: "#67e8f9" },
 ];
 
 export default function DevCompassPremium() {
   const id = useId().replace(/:/g, "");
 
-  const g = {
-    bg: `bg-${id}`,
-    glass: `glass-${id}`,
-    core: `core-${id}`,
-    needle: `needle-${id}`,
-    radar: `radar-${id}`,
+  const ids = {
+    background: `dev-compass-background-${id}`,
+    glass: `dev-compass-glass-${id}`,
+    northNeedle: `dev-compass-north-needle-${id}`,
+    southNeedle: `dev-compass-south-needle-${id}`,
+    centerCore: `dev-compass-center-core-${id}`,
+    radar: `dev-compass-radar-${id}`,
+    glow: `dev-compass-glow-${id}`,
+  };
+
+  const classes = {
+    root: `dev-compass-${id}`,
+    needle: `dev-compass-needle-${id}`,
+    radar: `dev-compass-radar-${id}`,
+    centerPulse: `dev-compass-center-pulse-${id}`,
+    activePath: `dev-compass-active-path-${id}`,
+    ring: `dev-compass-ring-${id}`,
+  };
+
+  const animations = {
+    idle: `dev-compass-idle-${id}`,
+    scan: `dev-compass-scan-${id}`,
+    radar: `dev-compass-radar-spin-${id}`,
+    pulse: `dev-compass-pulse-${id}`,
+    pathPulse: `dev-compass-path-pulse-${id}`,
   };
 
   return (
     <>
       <style>{`
-        .needle-group, .radar-lg, .radar-md, .radar-sm {
+        @keyframes ${animations.idle} {
+          0%, 100% { transform: rotate(39.7deg); }
+          50% { transform: rotate(40.3deg); }
+        }
+        @keyframes ${animations.scan} {
+          0% { transform: rotate(40deg); }
+          18% { transform: rotate(118deg); }
+          44% { transform: rotate(232deg); }
+          72% { transform: rotate(345deg); }
+          88% { transform: rotate(408deg); }
+          100% { transform: rotate(400deg); }
+        }
+        @keyframes ${animations.radar} {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes ${animations.pulse} {
+          0%, 100% { opacity: 0.45; transform: scale(0.94); }
+          50% { opacity: 0.9; transform: scale(1.06); }
+        }
+        @keyframes ${animations.pathPulse} {
+          0%, 100% { opacity: 0.64; }
+          50% { opacity: 1; }
+        }
+        .${classes.needle}, .${classes.radar}, .${classes.centerPulse}, .${classes.activePath} {
           transform-box: view-box;
           transform-origin: 120px 120px;
         }
-
-        @keyframes idle {
-          0%, 100% { transform: rotate(39.8deg); }
-          50%      { transform: rotate(40.2deg); }
+        .${classes.needle} {
+          animation: ${animations.idle} 5.5s ease-in-out infinite;
         }
-        .needle-group { animation: idle 7s ease-in-out infinite; }
-
-        @keyframes scan {
-          0%   { transform: rotate(40deg); }
-          26%  { transform: rotate(130deg); }
-          56%  { transform: rotate(250deg); }
-          80%  { transform: rotate(340deg); }
-          100% { transform: rotate(40deg); }
+        .${classes.radar} {
+          animation: ${animations.radar} 20s linear infinite;
+          opacity: 0.09;
+          transition: opacity 500ms ease;
         }
-        .dev-compass:hover .needle-group {
-          animation: scan 3.1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        .${classes.centerPulse} {
+          animation: ${animations.pulse} 3.4s ease-in-out infinite;
         }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes spinR { to { transform: rotate(-360deg); } }
-
-        .radar-lg { animation: spin 36s linear infinite; opacity: 0.055; }
-        .radar-md { animation: spinR 23s linear infinite; opacity: 0.07; }
-        .radar-sm { animation: spin 16s linear infinite; opacity: 0.055; }
-
-        .dev-compass:hover .radar-lg { opacity: 0.12; transition: opacity 1s ease; }
-        .dev-compass:hover .radar-md { opacity: 0.14; transition: opacity 1s ease; }
-        .dev-compass:hover .radar-sm { opacity: 0.1;  transition: opacity 1s ease; }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 0.4; }
-          50%      { opacity: 0.7; }
+        .${classes.activePath} {
+          animation: ${animations.pathPulse} 3.8s ease-in-out infinite;
         }
-        .core-glow { animation: pulse 4.2s ease-in-out infinite; }
-
-        @keyframes breath {
-          0%, 100% { opacity: 0.75; }
-          50%      { opacity: 1; }
+        .${classes.ring} {
+          transition: stroke-opacity 500ms ease, stroke-width 500ms ease;
         }
-        .node-core { animation: breath 6s ease-in-out infinite; }
-
+        .${classes.root}:hover .${classes.needle} {
+          animation: ${animations.scan} 2.15s cubic-bezier(0.22, 0.72, 0.18, 1) forwards;
+        }
+        .${classes.root}:hover .${classes.radar} {
+          opacity: 0.16;
+        }
+        .${classes.root}:hover .${classes.ring} {
+          stroke-opacity: 0.18;
+        }
         @media (prefers-reduced-motion: reduce) {
-          .needle-group, .radar-lg, .radar-md, .radar-sm, .core-glow, .node-core {
+          .${classes.needle}, .${classes.radar}, .${classes.centerPulse}, .${classes.activePath} {
             animation: none;
           }
-          .dev-compass:hover .needle-group {
+          .${classes.needle} {
+            transform: rotate(40deg);
+          }
+          .${classes.root}:hover .${classes.needle} {
             animation: none;
             transform: rotate(40deg);
           }
@@ -84,327 +127,234 @@ export default function DevCompassPremium() {
       <svg
         viewBox="0 0 240 240"
         role="img"
-        aria-label="DevCompass – AI programming path finder"
-        className="dev-compass relative z-10 h-auto w-[90%] cursor-pointer overflow-visible transition-transform duration-700 ease-out hover:scale-[1.02]"
+        aria-labelledby={`dev-compass-title-${id} dev-compass-description-${id}`}
+        className={`
+          ${classes.root}
+          relative z-10
+          h-auto w-[90%]
+          cursor-pointer
+          overflow-visible
+          transition-transform
+          duration-700
+          ease-out
+          hover:scale-[1.025]
+        `}
         xmlns="http://www.w3.org/2000/svg"
       >
+        
+        <desc id={`dev-compass-description-${id}`}>
+          قطب‌نمای DevCompass که مسیرهای مختلف برنامه‌نویسی را نمایش می‌دهد و عقربه آن به سمت شمال شرقی اشاره می‌کند.
+        </desc>
+
         <defs>
-          <radialGradient id={g.bg} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#0369a1" stopOpacity="0.03" />
-            <stop offset="75%" stopColor="#0f172a" stopOpacity="0.14" />
+          <radialGradient id={ids.background} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.065" />
+            <stop offset="58%" stopColor="#0f172a" stopOpacity="0.2" />
             <stop offset="100%" stopColor="#020617" stopOpacity="0" />
           </radialGradient>
 
-          <radialGradient id={g.glass} cx="28%" cy="24%" r="72%">
-            <stop offset="0%" stopColor="#fff" stopOpacity="0.03" />
+          <radialGradient id={ids.glass} cx="34%" cy="27%" r="72%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.055" />
+            <stop offset="38%" stopColor="#38bdf8" stopOpacity="0.015" />
             <stop offset="100%" stopColor="#020617" stopOpacity="0" />
           </radialGradient>
 
-          <linearGradient id={g.needle} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.92" />
-            <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.88" />
-            <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.8" />
+          <linearGradient id={ids.northNeedle} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f8fafc" />
+            <stop offset="30%" stopColor="#a5f3fc" />
+            <stop offset="70%" stopColor="#38bdf8" />
+            <stop offset="100%" stopColor="#0284c7" />
           </linearGradient>
 
-          <radialGradient id={g.core} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fff" />
-            <stop offset="40%" stopColor="#c4b5fd" />
-            <stop offset="80%" stopColor="#8b5cf6" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#5b21b6" stopOpacity="0" />
+          <linearGradient id={ids.southNeedle} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="60%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#1e3a8a" />
+          </linearGradient>
+
+          <radialGradient id={ids.centerCore} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="32%" stopColor="#c4b5fd" />
+            <stop offset="68%" stopColor="#818cf8" stopOpacity="0.52" />
+            <stop offset="100%" stopColor="#4f46e5" stopOpacity="0" />
           </radialGradient>
 
-          <linearGradient id={g.radar} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.16" />
-            <stop offset="100%" stopColor="#67e8f9" stopOpacity="0" />
+          <linearGradient id={ids.radar} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="0" />
+            <stop offset="65%" stopColor="#67e8f9" stopOpacity="0.06" />
+            <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.2" />
           </linearGradient>
 
-          <filter id={`bloom-${id}`} x="-18%" y="-18%" width="136%" height="136%">
-            <feGaussianBlur stdDeviation="0.8" result="b" />
+          <filter id={ids.glow} x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="1.1" result="blur" />
             <feMerge>
-              <feMergeNode in="b" />
+              <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
 
         {/* Background */}
-        <circle cx="120" cy="120" r="118" fill={`url(#${g.bg})`} />
-        <circle cx="120" cy="120" r="110" fill={`url(#${g.glass})`} />
+        <circle cx="120" cy="120" r="116" fill={`url(#${ids.background})`} />
+        <circle cx="120" cy="120" r="108" fill={`url(#${ids.glass})`} />
 
-        {/* Minimal PCB – only 4 elegant traces */}
-        <g opacity="0.04" stroke="#67e8f9" fill="none" strokeWidth="0.38" strokeLinecap="round">
-          <path d="M120 120 C105 95 92 78 81 68" />
-          <path d="M120 120 C137 92 152 76 163 68" />
-          <path d="M120 120 C148 115 162 122 172 132" />
-          <path d="M120 120 C95 148 80 160 68 172" />
-          <circle cx="81" cy="68" r="0.85" fill="#67e8f9" stroke="none" />
-          <circle cx="163" cy="68" r="0.85" fill="#67e8f9" stroke="none" />
-          <circle cx="172" cy="132" r="0.85" fill="#67e8f9" stroke="none" />
-          <circle cx="68" cy="172" r="0.85" fill="#67e8f9" stroke="none" />
+        {/* PCB traces */}
+        <g aria-hidden="true" fill="none" stroke="#67e8f9" strokeWidth="0.32" strokeOpacity="0.045" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M120 120 H102 Q97 120 97 115 V89 Q97 84 92 84 H79" />
+          <path d="M120 120 H138 Q143 120 143 115 V88 Q143 83 148 83 H162" />
+          <path d="M120 120 V139 Q120 144 125 144 H154 Q159 144 159 149 V161" />
+          <path d="M120 120 V141 Q120 146 115 146 H89 Q84 146 84 151 V166" />
+          <circle cx="79" cy="84" r="1" fill="#67e8f9" stroke="none" />
+          <circle cx="162" cy="83" r="1" fill="#67e8f9" stroke="none" />
+          <circle cx="159" cy="161" r="1" fill="#67e8f9" stroke="none" />
+          <circle cx="84" cy="166" r="1" fill="#67e8f9" stroke="none" />
         </g>
 
-        {/* Rings – fewer, clearer hierarchy */}
-        <circle cx="120" cy="120" r="112" fill="none" stroke="#67e8f9" strokeWidth="0.26" strokeOpacity="0.05" />
-        <circle cx="120" cy="120" r="100" fill="none" stroke="#38bdf8" strokeWidth="0.24" strokeOpacity="0.045" strokeDasharray="2.6 5" />
-        <circle cx="120" cy="120" r="88"  fill="none" stroke="#67e8f9" strokeWidth="0.36" strokeOpacity="0.065" strokeDasharray="1 4.2" strokeLinecap="round" />
-        <circle cx="120" cy="120" r="75"  fill="#020617" fillOpacity="0.05" stroke="#67e8f9" strokeWidth="0.42" strokeOpacity="0.1" />
-        <circle cx="120" cy="120" r="63"  fill="none" stroke="#60a5fa" strokeWidth="0.18" strokeOpacity="0.05" strokeDasharray="0.55 2.3" strokeLinecap="round" />
+        {/* Rings */}
+        <circle className={classes.ring} cx="120" cy="120" r="109" fill="none" stroke="#67e8f9" strokeWidth="0.42" strokeOpacity="0.075" />
+        <circle cx="120" cy="120" r="94" fill="none" stroke="#38bdf8" strokeWidth="0.34" strokeOpacity="0.075" strokeDasharray="2.5 5.5" />
+        <circle cx="120" cy="120" r="76" fill="#020617" fillOpacity="0.1" stroke="#67e8f9" strokeWidth="0.52" strokeOpacity="0.14" />
 
         {/* Radar */}
-        <g className="radar-lg" aria-hidden="true">
-          <path d="M120 120 L120 8 A112 112 0 0 1 232 120 Z" fill={`url(#${g.radar})`} />
-        </g>
-        <g className="radar-md" aria-hidden="true">
-          <path d="M120 120 L120 34 A86 86 0 0 1 206 120 Z" fill={`url(#${g.radar})`} />
-        </g>
-        <g className="radar-sm" aria-hidden="true">
-          <path d="M120 120 L120 54 A66 66 0 0 1 186 120 Z" fill={`url(#${g.radar})`} />
+        <g className={classes.radar} aria-hidden="true">
+          <path d="M120 120 L120 12 A108 108 0 0 1 196 44 Z" fill={`url(#${ids.radar})`} />
+          <line x1="120" y1="120" x2="196" y2="44" stroke="#67e8f9" strokeWidth="0.5" strokeOpacity="0.16" />
         </g>
 
-        {/* Nodes */}
-        {PROGRAMMING_PATHS.map(({ label, angle, color, size, glow }) => {
-          const r = 98.5;
-          const ld = 27.5;
-          const x = 120 + r * Math.cos(angle);
-          const y = 120 + r * Math.sin(angle);
+        {/* Path nodes */}
+        {PROGRAMMING_PATHS.map(({ label, shortLabel, angle, color, size, importance }) => {
+          const radius = 99;
+          const x = 120 + radius * Math.cos(angle);
+          const y = 120 + radius * Math.sin(angle);
+          const lineStartRadius = 78;
+          const lineStartX = 120 + lineStartRadius * Math.cos(angle);
+          const lineStartY = 120 + lineStartRadius * Math.sin(angle);
+          const isAI = label === "AI";
 
           return (
-            <g key={label}>
+            <g key={label} className={isAI ? classes.activePath : undefined}>
+              <title>{label}</title>
               <line
-                x1={120 + 68 * Math.cos(angle)}
-                y1={120 + 68 * Math.sin(angle)}
+                x1={lineStartX}
+                y1={lineStartY}
                 x2={x}
                 y2={y}
                 stroke={color}
-                strokeWidth="0.3"
-                strokeOpacity="0.15"
-                strokeDasharray="1.2 2.2"
+                strokeWidth={isAI ? 0.55 : 0.3}
+                strokeOpacity={isAI ? 0.34 : 0.12}
+                strokeDasharray="1.5 3"
                 strokeLinecap="round"
               />
-              <circle cx={x} cy={y} r={size + 2.3} fill={color} opacity={0.045 * glow} />
-              <circle
-                cx={x} cy={y} r={size}
-                fill="#020617" fillOpacity="0.9"
-                stroke={color} strokeWidth="0.65" strokeOpacity={0.65 * glow}
-              />
-              <circle
-                className="node-core"
-                cx={x} cy={y} r={size * 0.34}
-                fill={color} opacity={0.82 * glow}
-                filter={`url(#bloom-${id})`}
-              />
+              <circle cx={x} cy={y} r={size + 3.2} fill={color} opacity={0.035 * importance} />
+              <circle cx={x} cy={y} r={size} fill="#020617" fillOpacity="0.92" stroke={color} strokeWidth={isAI ? 0.9 : 0.55} strokeOpacity={0.58 * importance} />
+              <circle cx={x} cy={y} r={size * 0.32} fill={color} opacity={0.82 * importance} filter={isAI ? `url(#${ids.glow})` : undefined} />
               <text
-                x={x + ld * Math.cos(angle)}
-                y={y + ld * Math.sin(angle) + 1.7}
+                x={x}
+                y={y + 1.7}
                 textAnchor="middle"
-                fontSize="7"
-                fontWeight="600"
-                fill={color}
-                fontFamily="'SF Mono', 'Cascadia Code', 'JetBrains Mono', monospace"
-                opacity="0.8"
-                letterSpacing="0.4"
+                dominantBaseline="middle"
+                fill="#e0f2fe"
+                fontSize={shortLabel.length > 2 ? 3.3 : 4.2}
+                fontWeight="800"
+                fontFamily="'JetBrains Mono', 'Cascadia Code', monospace"
+                opacity="0.78"
               >
-                {label}
+                {shortLabel}
               </text>
             </g>
           );
         })}
 
-        {/* Degree ticks – only primaries + secondaries */}
+        {/* Degree marks */}
         <g aria-hidden="true">
-          {Array.from({ length: 24 }).map((_, i) => {
-            const angle = (i / 24) * Math.PI * 2 - Math.PI / 2;
-            const isPrimary = i % 6 === 0;
-            const outerR = 95;
-            const innerR = isPrimary ? 79.5 : 86;
+          {DEGREE_MARKS.map((_, index) => {
+            const angle = (index / 36) * Math.PI * 2 - Math.PI / 2;
+            const isPrimary = index % 9 === 0;
+            const isSecondary = index % 3 === 0;
+            const outerRadius = 93;
+            const innerRadius = isPrimary ? 82 : isSecondary ? 86 : 89.5;
+
             return (
               <line
-                key={i}
-                x1={120 + innerR * Math.cos(angle)}
-                y1={120 + innerR * Math.sin(angle)}
-                x2={120 + outerR * Math.cos(angle)}
-                y2={120 + outerR * Math.sin(angle)}
+                key={index}
+                x1={120 + innerRadius * Math.cos(angle)}
+                y1={120 + innerRadius * Math.sin(angle)}
+                x2={120 + outerRadius * Math.cos(angle)}
+                y2={120 + outerRadius * Math.sin(angle)}
                 stroke={isPrimary ? "#67e8f9" : "#64748b"}
-                strokeWidth={isPrimary ? 0.95 : 0.35}
-                strokeOpacity={isPrimary ? 0.5 : 0.18}
+                strokeWidth={isPrimary ? 1 : isSecondary ? 0.5 : 0.25}
+                strokeOpacity={isPrimary ? 0.52 : isSecondary ? 0.22 : 0.11}
               />
             );
           })}
-          {["N", "E", "S", "W"].map((dir, i) => {
-            const angle = -Math.PI / 2 + (i * Math.PI) / 2;
-            return (
-              <text
-                key={dir}
-                x={120 + 52 * Math.cos(angle)}
-                y={120 + 52 * Math.sin(angle) + 2.8}
-                textAnchor="middle"
-                fill={dir === "N" ? "#e0f2fe" : "#67e8f9"}
-                fontSize="8.2"
-                fontWeight="700"
-                fontFamily="monospace"
-                opacity="0.7"
-              >
-                {dir}
-              </text>
-            );
-          })}
+
+          {DIRECTIONS.map(({ label, angle, color }) => (
+            <text
+              key={label}
+              x={120 + 58 * Math.cos(angle)}
+              y={120 + 58 * Math.sin(angle) + 3}
+              textAnchor="middle"
+              fill={color}
+              fontSize="8"
+              fontWeight="800"
+              fontFamily="monospace"
+              opacity={label === "N" ? 0.92 : 0.68}
+            >
+              {label}
+            </text>
+          ))}
         </g>
 
-        {/* Needle – unified elegant form */}
-        <g className="needle-group" filter={`url(#bloom-${id})`}>
-          {/* single continuous shape that reads as refined </> */}
+        {/* Needle */}
+        <g className={classes.needle}>
           <path
-            d="M120 28
-               L131 48
-               L124 52
-               L120 44
-               L116 52
-               L109 48
-               Z"
-            fill={`url(#${g.needle})`}
-            opacity="0.9"
-          />
-          {/* center stem – stops well before chip */}
-          <line
-            x1="114" y1="90"
-            x2="126" y2="126"
-            stroke={`url(#${g.needle})`}
-            strokeWidth="3.2"
-            strokeLinecap="round"
-            opacity="0.78"
-          />
-          <line
-            x1="115.2" y1="92"
-            x2="124.8" y2="124"
-            stroke="#fff"
-            strokeWidth="0.9"
-            strokeLinecap="round"
-            opacity="0.2"
-          />
-          {/* south tip */}
-          <path
-            d="M120 212
-               L109 192
-               L116 188
-               L120 196
-               L124 188
-               L131 192
-               Z"
-            fill={`url(#${g.needle})`}
-            opacity="0.78"
-          />
-        </g>
-
-        {/* AI Chip – clear hero */}
-        <g>
-          <circle
-            cx="120" cy="120" r="22.5"
-            fill="none"
-            stroke="#a78bfa"
-            strokeWidth="0.28"
-            strokeOpacity="0.11"
-            strokeDasharray="1.5 2.5"
-          />
-
-          <rect
-            x="108" y="108"
-            width="24" height="24"
-            rx="2.6"
-            fill="#0f172a"
-            fillOpacity="0.96"
-            stroke="#a78bfa"
-            strokeWidth="0.7"
-            strokeOpacity="0.58"
-          />
-
-          <rect
-            x="111" y="111"
-            width="18" height="18"
-            rx="1.5"
-            fill="#1e1b4b"
-            stroke="#c4b5fd"
-            strokeWidth="0.35"
-            strokeOpacity="0.4"
-          />
-
-          {/* pins */}
-          <g stroke="#a78bfa" strokeWidth="0.85" strokeLinecap="round" opacity="0.42">
-            <line x1="108" y1="113.5" x2="105" y2="113.5" />
-            <line x1="108" y1="120"   x2="105" y2="120" />
-            <line x1="108" y1="126.5" x2="105" y2="126.5" />
-            <line x1="132" y1="113.5" x2="135" y2="113.5" />
-            <line x1="132" y1="120"   x2="135" y2="120" />
-            <line x1="132" y1="126.5" x2="135" y2="126.5" />
-          </g>
-
-          {/* micro lines */}
-          <g stroke="#c4b5fd" strokeWidth="0.3" strokeOpacity="0.28" fill="none">
-            <path d="M114.5 114.5 H125.5" />
-            <path d="M114.5 120 H125.5" />
-            <path d="M114.5 125.5 H125.5" />
-            <path d="M117 114.5 V125.5" />
-            <path d="M123 114.5 V125.5" />
-          </g>
-
-          <circle
-            className="core-glow"
-            cx="120" cy="120"
-            r="5"
-            fill={`url(#${g.core})`}
-            filter={`url(#bloom-${id})`}
-          />
-          <circle cx="120" cy="120" r="1.55" fill="#fff" opacity="0.95" />
-
-          <text
-            x="120" y="131.2"
-            textAnchor="middle"
-            fill="#c4b5fd"
-            fontSize="4"
-            fontWeight="700"
-            fontFamily="monospace"
-            letterSpacing="0.45"
-            opacity="0.75"
-          >
-            AI
-          </text>
-        </g>
-
-        {/* Bottom HUD – clearer */}
-        <g aria-hidden="true">
-          <text
-            x="120" y="228.5"
-            textAnchor="middle"
-            fill="#67e8f9"
-            fontSize="4.5"
-            fontWeight="600"
-            fontFamily="monospace"
-            letterSpacing="0.85"
-            opacity="0.58"
-          >
-            FIND YOUR PATH
-          </text>
-          <rect
-            x="93" y="234"
-            width="54" height="7.2"
-            rx="3.6"
+            d="M120 25 L130 107 L124 113 L120 104 L116 113 L110 107 Z"
             fill="#020617"
-            fillOpacity="0.5"
-            stroke="#67e8f9"
-            strokeWidth="0.25"
-            strokeOpacity="0.16"
+            opacity="0.24"
+            transform="translate(1.2 1.8)"
           />
-          <text
-            x="120" y="239.5"
-            textAnchor="middle"
-            fill="#bae6fd"
-            fontSize="4"
-            fontWeight="700"
-            fontFamily="monospace"
-            letterSpacing="0.65"
-            opacity="0.65"
-          >
-            DEV·COMPASS
-          </text>
+          <path
+            d="M120 23 L130 107 L124 113 L120 103 L116 113 L110 107 Z"
+            fill={`url(#${ids.northNeedle})`}
+            opacity="0.96"
+            filter={`url(#${ids.glow})`}
+          />
+          <path
+            d="M116.2 91 L111.5 96 L116.2 101 M123.8 91 L128.5 96 L123.8 101"
+            fill="none"
+            stroke="#e0f2fe"
+            strokeWidth="1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.55"
+          />
+          <line x1="120" y1="32" x2="120" y2="103" stroke="#ffffff" strokeWidth="0.65" strokeOpacity="0.42" />
+          <path
+            d="M120 198 L110.5 133 L116 126 L120 136 L124 126 L129.5 133 Z"
+            fill={`url(#${ids.southNeedle})`}
+            opacity="0.76"
+          />
+          <line x1="120" y1="190" x2="120" y2="136" stroke="#bfdbfe" strokeWidth="0.55" strokeOpacity="0.24" />
+        </g>
+
+        {/* Pivot + AI Core */}
+        <g>
+          <circle cx="120" cy="120" r="18" fill="#020617" fillOpacity="0.48" stroke="#67e8f9" strokeWidth="0.42" strokeOpacity="0.16" />
+          <circle cx="120" cy="120" r="13" fill="#020617" stroke="#818cf8" strokeWidth="0.72" strokeOpacity="0.48" />
+          <path
+            d="M120 110 L128 115 L128 125 L120 130 L112 125 L112 115 Z"
+            fill="#111827"
+            stroke="#a78bfa"
+            strokeWidth="0.65"
+            strokeOpacity="0.52"
+          />
+          <g stroke="#c4b5fd" strokeWidth="0.35" strokeOpacity="0.3">
+            <line x1="114" y1="116" x2="126" y2="116" />
+            <line x1="114" y1="120" x2="126" y2="120" />
+            <line x1="114" y1="124" x2="126" y2="124" />
+          </g>
+          <circle className={classes.centerPulse} cx="120" cy="120" r="7" fill={`url(#${ids.centerCore})`} />
+          <circle cx="120" cy="120" r="2" fill="#ffffff" />
         </g>
       </svg>
     </>

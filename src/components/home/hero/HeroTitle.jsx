@@ -11,7 +11,7 @@ export default function HeroTitle() {
             <br />
             <span
                 className="
-                    bg-gradient-to-l from-cyan-300 via-blue-400 to-violet-400
+                    bg-gradient-to-l from-cyan-300 via-blue-400 to-sky-500
                     bg-clip-text text-transparent
                 "
             >
