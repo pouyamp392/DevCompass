@@ -4,20 +4,28 @@ import Quiz from "./pages/Quiz";
 import Result from "./pages/Result";
 import Roadmap from "./pages/Roadmap";
 import Skill from "./pages/Skill";
+import Dashboard from "./pages/Dashboard";
+import MainLayout from "./layouts/MainLayout";
+import Skills from "./pages/Skills";
 
 export default function App() {
     return (
         <Routes>
 
             <Route path="/" element={<Home />} />
-
             <Route path="/quiz" element={<Quiz />} />
-
             <Route path="/result" element={<Result />} />
 
-            <Route path="/roadmap" element={<Roadmap />} />
+            <Route element={<MainLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
 
-            <Route path="/skill/:id" element={<Skill />} />
+                <Route path="/roadmap" element={<Roadmap />} />
+
+                <Route path="/skill/:id" element={<Skill />} />
+
+                <Route path="/skills" element={<Skills />} />
+
+            </Route>
 
         </Routes>
     );

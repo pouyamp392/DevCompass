@@ -1,17 +1,17 @@
 import { Link } from "react-router-dom";
-import SkillActionButton from "../components/skills/SkillActionButton";
-import SkillEstimate from "../components/skills/SkillEstimate";
-import SkillExercise from "../components/skills/SkillExercise";
-import SkillHeader from "../components/skills/SkillHeader";
-import SkillNextSteps from "../components/skills/SkillNextSteps";
-import SkillOverallProgress from "../components/skills/SkillOverallProgress";
-import SkillPrerequisites from "../components/skills/SkillPrerequisites";
-import SkillProgress from "../components/skills/SkillProgress";
-import SkillProject from "../components/skills/SkillProject";
-import SkillResources from "../components/skills/SkillResources";
-import SkillStats from "../components/skills/SkillStats";
-import SkillStatus from "../components/skills/SkillStatus";
-import SkillSuggestions from "../components/skills/SkillSuggestions";
+import SkillActionButton from "../components/skill/SkillActionButton";
+import SkillEstimate from "../components/skill/SkillEstimate";
+import SkillExercise from "../components/skill/SkillExercise";
+import SkillHeader from "../components/skill/SkillHeader";
+import SkillNextSteps from "../components/skill/SkillNextSteps";
+import SkillOverallProgress from "../components/skill/SkillOverallProgress";
+import SkillPrerequisites from "../components/skill/SkillPrerequisites";
+import SkillProgress from "../components/skill/SkillProgress";
+import SkillProject from "../components/skill/SkillProject";
+import SkillResources from "../components/skill/SkillResources";
+import SkillStats from "../components/skill/SkillStats";
+import SkillStatus from "../components/skill/SkillStatus";
+import SkillSuggestions from "../components/skill/SkillSuggestions";
 import Scene from "../components/ui/Scene";
 import { useSkillData } from "../hooks/useSkillData";
 
@@ -36,6 +36,8 @@ export default function Skill() {
         diffText
     } = useSkillData();
 
+    
+    
     if (!skill) {
         return (
             <section className="min-h-screen flex items-center justify-center">
