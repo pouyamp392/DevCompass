@@ -8,6 +8,14 @@ export default function MainLayout() {
 
     return (
         <>
+         <style>{
+            `
+            body{
+            padding-bottom : 5rem;
+            }
+            `
+            }
+         </style>
 
             <Outlet />
 
