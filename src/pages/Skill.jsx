@@ -33,11 +33,13 @@ export default function Skill() {
         currentStage,
         suggestedSkills,
         roadmap,
-        diffText
+        diffText,
+        handleProgressUpdate,
+
     } = useSkillData();
 
     
-    
+
     if (!skill) {
         return (
             <section className="min-h-screen flex items-center justify-center">
@@ -56,33 +58,35 @@ export default function Skill() {
         <>
             <Scene variant="result" />
             <section className="relative z-10 max-w-2xl mx-auto px-6 pt-16 pb-24 text-white space-y-12">
-                
+
                 <SkillHeader skill={skill} />
                 <SkillStatus status={status} />
                 <SkillOverallProgress overallProgress={overallProgress} />
                 <SkillProgress skillProgress={skillProgress} skillTitle={skill.title} />
                 <SkillStats skill={skill} roadmap={roadmap} diffText={diffText} />
                 <SkillEstimate estimateEndDate={estimateEndDate} />
-                
+
                 <SkillProject project={skill.project} />
                 <SkillExercise exercise={skill.exercise} />
-                
+
                 <SkillPrerequisites requires={requires} progress={progress} />
-                <SkillNextSteps 
+                <SkillNextSteps
                     nextSkillsInStage={nextSkillsInStage}
                     nextStage={nextStage}
                     currentStage={currentStage}
                 />
-                
+
                 <SkillResources resources={skill.resources} />
-                <SkillSuggestions 
-                    suggestedSkills={suggestedSkills} 
-                    skillProgress={skillProgress} 
+                <SkillSuggestions
+                    suggestedSkills={suggestedSkills}
+                    skillProgress={skillProgress}
                 />
-                
-                <SkillActionButton 
+
+                <SkillActionButton
                     getButtonText={getButtonText}
                     isButtonDisabled={isButtonDisabled}
+                    onProgressUpdate={handleProgressUpdate}
+
                 />
             </section>
         </>

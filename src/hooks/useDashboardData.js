@@ -1,147 +1,296 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import QuizContext from "../context/QuizContext";
 
 export function useDashboardData() {
-    const { roadmap, progress } = useContext(QuizContext);
+    const {
+        roadmap,
+        progress,
+        roadmapProgress,
+        allSkills,
+        completedSkills,
+    } = useContext(QuizContext);
 
     const [dailyProgress, setDailyProgress] = useState(0);
     const [streakDays, setStreakDays] = useState(7);
 
-    const allSkills = roadmap.flatMap(stage => stage.skills);
+    // --------------------------------
+    // Skill states
+    // --------------------------------
 
-    const completedSkills = allSkills.filter(
-        skill => (progress?.[skill.id] || 0) >= 100
+    const inProgressSkills = allSkills.filter((skill) => {
+        const value =
+            Number(progress?.[skill.id]) || 0;
+
+        return value > 0 && value < 100;
+    });
+
+    const lockedSkills = allSkills.filter((skill) => {
+        const value =
+            Number(progress?.[skill.id]) || 0;
+
+        // Already started/completed
+        if (value > 0) return false;
+
+        const requires = skill.requires || [];
+
+        const hasUncompletedPrereq =
+            requires.some(
+                (requiredId) =>
+                    (Number(
+                        progress?.[requiredId]
+                    ) || 0) < 100
+            );
+
+        return hasUncompletedPrereq;
+    });
+
+    // --------------------------------
+    // Skill availability
+    // --------------------------------
+
+    function isSkillAvailable(skill) {
+        const value =
+            Number(progress?.[skill.id]) || 0;
+
+        // Already completed
+        if (value >= 100) {
+            return false;
+        }
+
+        const requires = skill.requires || [];
+
+        return requires.every(
+            (requiredId) =>
+                (Number(
+                    progress?.[requiredId]
+                ) || 0) >= 100
+        );
+    }
+
+    // --------------------------------
+    // Roadmap skill order
+    // --------------------------------
+
+    const roadmapSkills = roadmap.flatMap(
+        (stage) => stage.skills || []
     );
 
-    const inProgressSkills = allSkills.filter(
-        skill => {
-            const value = progress?.[skill.id] || 0;
+    // --------------------------------
+    // Current skill
+    // --------------------------------
+
+    const currentSkill =
+        roadmapSkills.find((skill) => {
+            const value =
+                Number(progress?.[skill.id]) || 0;
+
             return value > 0 && value < 100;
-        }
-    );
+        }) || null;
 
-    const lockedSkills = allSkills.filter(
-        skill => {
-            const value = progress?.[skill.id] || 0;
-            if (value > 0) return false;
+    // --------------------------------
+    // Next skill
+    // --------------------------------
 
-            const requires = allSkills.filter(item => skill.requires?.includes(item.id));
-            const hasUncompletedPrereq = requires.some(req => (progress?.[req.id] || 0) < 100);
-            return hasUncompletedPrereq;
-        }
-    );
+    const nextSkill =
+        roadmapSkills.find((skill) => {
+            const value =
+                Number(progress?.[skill.id]) || 0;
 
-    const currentSkill = inProgressSkills[0] || null;
+            // Already started/completed
+            if (value > 0) {
+                return false;
+            }
+
+            return isSkillAvailable(skill);
+        }) || null;
+
+    // --------------------------------
+    // XP
+    // --------------------------------
 
     const totalXP = completedSkills.reduce(
-        (acc, skill) => acc + (skill.xp || 0), 0
+        (acc, skill) =>
+            acc + (Number(skill.xp) || 0),
+        0
     );
 
-    const roadmapProgress = Math.floor(
-        (completedSkills.length / allSkills.length) * 100
-    );
+    // --------------------------------
+    // Current stage
+    // --------------------------------
 
-    const currentStage = roadmap.find(stage =>
-        stage.skills.some(s => s.id === currentSkill?.id)
-    );
+    const currentStage =
+        roadmap.find((stage) =>
+            stage.skills?.some(
+                (skill) =>
+                    skill.id === currentSkill?.id
+            )
+        ) || null;
+
+    // --------------------------------
+    // Recent skills
+    // --------------------------------
 
     const recentSkills = [...allSkills]
-        .filter(s => (progress?.[s.id] || 0) > 0)
-        .sort((a, b) => (progress?.[b.id] || 0) - (progress?.[a.id] || 0))
+        .filter(
+            (skill) =>
+                (Number(
+                    progress?.[skill.id]
+                ) || 0) > 0
+        )
+        .sort(
+            (a, b) =>
+                (Number(
+                    progress?.[b.id]
+                ) || 0) -
+                (Number(
+                    progress?.[a.id]
+                ) || 0)
+        )
         .slice(0, 3);
 
-    const getNextSuggestedSkill = () => {
-        if (currentSkill) return currentSkill;
+    // --------------------------------
+    // Current skill progress
+    // --------------------------------
 
-        const available = allSkills.find(skill => {
-            const value = progress?.[skill.id] || 0;
-            if (value > 0) return false;
+    const skillProgress = currentSkill
+        ? Number(
+              progress?.[currentSkill.id]
+          ) || 0
+        : 0;
 
-            const requires = allSkills.filter(item => skill.requires?.includes(item.id));
-            const hasUncompletedPrereq = requires.some(req => (progress?.[req.id] || 0) < 100);
-            return !hasUncompletedPrereq;
-        });
-
-        return available || allSkills[0];
-    };
-
-    const nextSkill = getNextSuggestedSkill();
-    const skillProgress = currentSkill ? (progress?.[currentSkill.id] || 0) : 0;
+    // --------------------------------
+    // Achievements
+    // --------------------------------
 
     const achievements = [
         {
             id: "first_skill",
             label: "اولین مهارت",
             icon: "🌟",
-            unlocked: completedSkills.length >= 1,
-            description: "یک مهارت رو کامل کردی"
+            unlocked:
+                completedSkills.length >= 1,
+            description:
+                "یک مهارت رو کامل کردی",
         },
         {
             id: "five_skills",
             label: "مهارت‌آموز",
             icon: "🏅",
-            unlocked: completedSkills.length >= 5,
-            description: "۵ مهارت رو کامل کردی"
+            unlocked:
+                completedSkills.length >= 5,
+            description:
+                "۵ مهارت رو کامل کردی",
         },
         {
             id: "ten_skills",
             label: "متخصص",
             icon: "🏆",
-            unlocked: completedSkills.length >= 10,
-            description: "۱۰ مهارت رو کامل کردی"
+            unlocked:
+                completedSkills.length >= 10,
+            description:
+                "۱۰ مهارت رو کامل کردی",
         },
         {
             id: "xp_500",
             label: "جمع‌آورنده XP",
             icon: "💎",
             unlocked: totalXP >= 500,
-            description: "۵۰۰ XP جمع کردی"
+            description:
+                "۵۰۰ XP جمع کردی",
         },
         {
             id: "xp_1000",
             label: "استاد XP",
             icon: "👑",
             unlocked: totalXP >= 1000,
-            description: "۱۰۰۰ XP جمع کردی"
+            description:
+                "۱۰۰۰ XP جمع کردی",
         },
         {
             id: "seven_day",
             label: "متدی",
             icon: "🔥",
             unlocked: streakDays >= 7,
-            description: "۷ روز متوالی یادگیری"
-        }
+            description:
+                "۷ روز متوالی یادگیری",
+        },
     ];
 
-    const unlockedAchievements = achievements.filter(a => a.unlocked);
-    const nextAchievement = achievements.find(a => !a.unlocked);
+    const unlockedAchievements =
+        achievements.filter(
+            (achievement) =>
+                achievement.unlocked
+        );
+
+    const nextAchievement =
+        achievements.find(
+            (achievement) =>
+                !achievement.unlocked
+        ) || null;
+
+    // --------------------------------
+    // Daily progress
+    // --------------------------------
 
     useEffect(() => {
-        const saved = localStorage.getItem('dailyProgress');
-        if (saved) {
-            setDailyProgress(parseInt(saved));
+        const saved =
+            localStorage.getItem(
+                "dailyProgress"
+            );
+
+        if (saved !== null) {
+            setDailyProgress(
+                Number(saved) || 0
+            );
         }
     }, []);
 
+    useEffect(() => {
+        localStorage.setItem(
+            "dailyProgress",
+            String(dailyProgress)
+        );
+    }, [dailyProgress]);
+
+    // --------------------------------
+    // Return
+    // --------------------------------
+
     return {
+        // Skills
         allSkills,
         completedSkills,
         inProgressSkills,
         lockedSkills,
+
+        // Current / next
         currentSkill,
         nextSkill,
-        totalXP,
-        roadmapProgress,
         currentStage,
-        recentSkills,
+
+        // Progress
+        progress,
+        roadmapProgress,
         skillProgress,
+
+        // XP
+        totalXP,
+
+        // Recent
+        recentSkills,
+
+        // Achievements
         achievements,
         unlockedAchievements,
         nextAchievement,
+
+        // Daily
         dailyProgress,
         setDailyProgress,
         streakDays,
-        progress,
-        roadmap
+        setStreakDays,
+
+        // Roadmap
+        roadmap,
     };
 }

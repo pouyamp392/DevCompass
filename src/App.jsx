@@ -7,26 +7,37 @@ import Skill from "./pages/Skill";
 import Dashboard from "./pages/Dashboard";
 import MainLayout from "./layouts/MainLayout";
 import Skills from "./pages/Skills";
+import Register from "./pages/Register";
+import Login from "./pages/login";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 export default function App() {
     return (
         <Routes>
 
             <Route path="/" element={<Home />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            
             <Route path="/quiz" element={<Quiz />} />
+
             <Route path="/result" element={<Result />} />
 
-            <Route element={<MainLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
+            <Route element={<ProtectedRoute />}>
 
-                <Route path="/roadmap" element={<Roadmap />} />
 
-                <Route path="/skill/:id" element={<Skill />} />
+                <Route element={<MainLayout />}>
 
-                <Route path="/skills" element={<Skills />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
 
+                    <Route path="/roadmap" element={<Roadmap />} />
+
+                    <Route path="/skill/:id" element={<Skill />} />
+
+                    <Route path="/skills" element={<Skills />} />
+
+                </Route>
             </Route>
-
         </Routes>
     );
 }

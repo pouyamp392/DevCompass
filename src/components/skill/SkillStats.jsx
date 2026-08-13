@@ -1,11 +1,4 @@
 export default function SkillStats({ skill, roadmap, diffText }) {
-    const difficultyLabel = {
-        1: "آسون",
-        2: "متوسط",
-        3: "سخت",
-        4: "خیلی سخت",
-        5: "افسانه‌ای",
-    };
 
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

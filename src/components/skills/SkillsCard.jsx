@@ -1,162 +1,388 @@
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import {
     HiOutlineLockClosed,
     HiArrowTrendingUp,
-    HiOutlineArrowLongDown,
+    HiCheckCircle,
 } from "react-icons/hi2";
 
 export default function SkillsCard({
     skill,
     status,
-    value,
-    isLocked,
+    value = 0,
+    isLocked = false,
     prereqs,
     skillPath,
     hoveredSkill,
     setHoveredSkill,
 }) {
+    const progress = Math.min(
+        100,
+        Math.max(0, Number(value) || 0)
+    );
+
+    const isCompleted = status === "completed";
+    const isInProgress = status === "in-progress";
+    const isAvailable = status === "available";
+
+    const canOpen =
+        !isLocked &&
+        !isCompleted;
+
+    const handleMouseEnter = () => {
+        setHoveredSkill?.(skill.id);
+    };
+
+    const handleMouseLeave = () => {
+        setHoveredSkill?.(null);
+    };
+
     return (
         <Link
-            to={isLocked ? "#" : `/skill/${skill.id}`}
-            onClick={(e) => isLocked && e.preventDefault()}
-            onMouseEnter={() => setHoveredSkill(skill.id)}
-            onMouseLeave={() => setHoveredSkill(null)}
+            to={canOpen ? `/skill/${skill.id}` : "#"}
+            onClick={(event) => {
+                if (!canOpen) {
+                    event.preventDefault();
+                }
+            }}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             className={`
-                block p-4 rounded-2xl border transition-all duration-200 group relative
-                ${isLocked
-                    ? "border-zinc-800/50 bg-zinc-900/20 cursor-not-allowed opacity-50"
-                    : "border-white/5 bg-white/[0.02] hover:border-cyan-400/20 hover:bg-cyan-400/[0.03]"
+                block
+                p-4
+                rounded-2xl
+                border
+                transition-all
+                duration-200
+                group
+
+                ${
+                    isLocked
+                        ? `
+                            border-zinc-800/50
+                            bg-zinc-900/20
+                            cursor-not-allowed
+                            opacity-50
+                        `
+                        : isCompleted
+                        ? `
+                            border-emerald-400/10
+                            bg-emerald-400/[0.02]
+                            hover:border-emerald-400/20
+                        `
+                        : isInProgress
+                        ? `
+                            border-cyan-400/20
+                            bg-cyan-400/[0.03]
+                            hover:border-cyan-400/40
+                        `
+                        : `
+                            border-white/5
+                            bg-white/[0.02]
+                            hover:border-cyan-400/20
+                            hover:bg-cyan-400/[0.03]
+                        `
                 }
             `}
         >
-            <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-all ${
-                    status === "completed" ? "bg-emerald-400/10" :
-                    status === "in-progress" ? "bg-cyan-400/10" :
-                    "bg-white/5"
-                }`}>
-                    {skill.icon || "📘"}
+            <div className="flex items-center gap-4">
+
+                {/* ================================
+                    ICON
+                ================================= */}
+
+                <div
+                    className={`
+                        w-10
+                        h-10
+                        rounded-xl
+                        flex
+                        items-center
+                        justify-center
+                        text-xl
+                        flex-shrink-0
+
+                        ${
+                            isLocked
+                                ? "bg-zinc-800/40"
+                                : isCompleted
+                                ? "bg-emerald-400/10"
+                                : isInProgress
+                                ? "bg-cyan-400/10"
+                                : "bg-white/5"
+                        }
+                    `}
+                >
+                    {isLocked ? (
+                        <HiOutlineLockClosed
+                            className="text-zinc-600"
+                            size={18}
+                        />
+                    ) : isCompleted ? (
+                        <HiCheckCircle
+                            className="text-emerald-400"
+                            size={20}
+                        />
+                    ) : (
+                        skill.icon || "📘"
+                    )}
                 </div>
 
+                {/* ================================
+                    CONTENT
+                ================================= */}
+
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                        <h4 className={`font-bold text-sm truncate ${
-                            status === "completed" ? "text-emerald-300" :
-                            status === "in-progress" ? "text-white" :
-                            "text-zinc-400"
-                        }`}>
+
+                    <div className="flex items-center gap-2 min-w-0">
+
+                        <h4
+                            className={`
+                                font-bold
+                                text-sm
+                                truncate
+
+                                ${
+                                    isLocked
+                                        ? "text-zinc-600"
+                                        : isCompleted
+                                        ? "text-emerald-300"
+                                        : isInProgress
+                                        ? "text-white"
+                                        : "text-zinc-300"
+                                }
+                            `}
+                        >
                             {skill.title}
                         </h4>
-                        {status === "in-progress" && (
-                            <span className="text-[10px] bg-cyan-400/10 text-cyan-400 px-1.5 py-0.5 rounded-full">
-                                {Math.floor(value)}%
+
+                        {/* Status */}
+
+                        {isInProgress && (
+                            <span
+                                className="
+                                    flex-shrink-0
+                                    text-[10px]
+                                    bg-cyan-400/10
+                                    text-cyan-400
+                                    px-1.5
+                                    py-0.5
+                                    rounded-full
+                                "
+                            >
+                                {Math.floor(progress)}%
                             </span>
                         )}
+
+                        {isCompleted && (
+                            <span
+                                className="
+                                    flex-shrink-0
+                                    text-[10px]
+                                    bg-emerald-400/10
+                                    text-emerald-400
+                                    px-1.5
+                                    py-0.5
+                                    rounded-full
+                                "
+                            >
+                                کامل
+                            </span>
+                        )}
+
+                        {isAvailable && (
+                            <span
+                                className="
+                                    hidden
+                                    sm:inline-flex
+                                    flex-shrink-0
+                                    text-[10px]
+                                    bg-white/5
+                                    text-zinc-500
+                                    px-1.5
+                                    py-0.5
+                                    rounded-full
+                                "
+                            >
+                                آماده
+                            </span>
+                        )}
+
+                        {/* XP */}
+
                         {skill.xp && (
-                            <span className="text-[10px] bg-yellow-400/10 text-yellow-400 px-1.5 py-0.5 rounded-full">
+                            <span
+                                className="
+                                    flex-shrink-0
+                                    text-[10px]
+                                    bg-yellow-400/10
+                                    text-yellow-400
+                                    px-1.5
+                                    py-0.5
+                                    rounded-full
+                                "
+                            >
                                 +{skill.xp}
                             </span>
                         )}
                     </div>
-                    <p className="text-zinc-500 text-xs truncate mt-0.5">
+
+                    {/* Description */}
+
+                    <p
+                        className="
+                            text-zinc-500
+                            text-xs
+                            truncate
+                            mt-0.5
+                        "
+                    >
                         {skill.description}
                     </p>
                 </div>
 
+                {/* ================================
+                    RIGHT SIDE
+                ================================= */}
+
                 <div className="flex items-center gap-2 flex-shrink-0">
+
+                    {/* Difficulty */}
+
                     <div className="hidden md:flex gap-0.5">
-                        {[1, 2, 3, 4, 5].map(star => (
+                        {[1, 2, 3, 4, 5].map((star) => (
                             <div
                                 key={star}
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                    star <= (skill.difficulty || 1) ? "bg-cyan-400" : "bg-white/10"
-                                }`}
+                                className={`
+                                    w-1.5
+                                    h-1.5
+                                    rounded-full
+
+                                    ${
+                                        star <=
+                                        Math.min(
+                                            5,
+                                            Math.max(
+                                                1,
+                                                Number(
+                                                    skill.difficulty
+                                                ) || 1
+                                            )
+                                        )
+                                            ? "bg-cyan-400"
+                                            : "bg-white/10"
+                                    }
+                                `}
                             />
                         ))}
                     </div>
-                    {!isLocked ? (
-                        <HiArrowTrendingUp className="text-zinc-600 group-hover:text-cyan-400 transition-colors" size={16} />
+
+                    {/* Lock / Arrow */}
+
+                    {isLocked ? (
+                        <HiOutlineLockClosed
+                            className="text-zinc-600"
+                            size={14}
+                        />
+                    ) : isCompleted ? (
+                        <HiCheckCircle
+                            className="
+                                text-emerald-400/70
+                            "
+                            size={16}
+                        />
                     ) : (
-                        <HiOutlineLockClosed className="text-zinc-600" size={14} />
+                        <HiArrowTrendingUp
+                            className="
+                                text-zinc-600
+                                group-hover:text-cyan-400
+                                transition-colors
+                            "
+                            size={16}
+                        />
                     )}
                 </div>
             </div>
 
-            {/* Skill Path */}
-            <AnimatePresence>
-                {hoveredSkill === skill.id && !isLocked && skillPath.length > 1 && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="mt-3 pt-3 border-t border-white/5 overflow-hidden"
-                    >
-                        <p className="text-[10px] text-zinc-500 mb-2 flex items-center gap-1">
-                            <HiOutlineArrowLongDown size={12} className="text-cyan-400" /> مسیر یادگیری
-                        </p>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                            {skillPath.map((step, i) => (
-                                <div key={step.id} className="flex items-center gap-1.5">
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                                        step.completed
-                                            ? "bg-emerald-400/10 text-emerald-400"
-                                            : step.inProgress
-                                            ? "bg-cyan-400/10 text-cyan-400"
-                                            : "bg-white/5 text-zinc-500"
-                                    }`}>
-                                        {step.icon} {step.title}
-                                    </span>
-                                    {i < skillPath.length - 1 && (
-                                        <span className="text-zinc-700 text-xs">↓</span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* ================================
+                PROGRESS
+            ================================= */}
 
-            {/* Prerequisites */}
-            <AnimatePresence>
-                {hoveredSkill === skill.id && !isLocked && (prereqs.required.length > 0 || prereqs.recommended.length > 0) && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="mt-2 pt-2 border-t border-white/5 overflow-hidden"
-                    >
-                        <div className="flex flex-wrap gap-2">
-                            {prereqs.required.length > 0 && (
-                                <div className="flex items-center gap-1">
-                                    <span className="text-[10px] text-red-400/70">نیاز:</span>
-                                    {prereqs.required.map(req => (
-                                        <span key={req.id} className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                                            req.completed ? "bg-emerald-400/10 text-emerald-400" : "bg-red-400/10 text-red-400"
-                                        }`}>
-                                            {req.completed ? "✅" : "⬜"} {req.title}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-                            {prereqs.recommended.length > 0 && (
-                                <div className="flex items-center gap-1">
-                                    <span className="text-[10px] text-yellow-400/70">پیشنهادی:</span>
-                                    {prereqs.recommended.map(rec => (
-                                        <span key={rec.id} className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                                            rec.completed ? "bg-emerald-400/10 text-emerald-400" : "bg-yellow-400/10 text-yellow-400"
-                                        }`}>
-                                            {rec.completed ? "✅" : "⭐"} {rec.title}
-                                        </span>
-                                    ))}
-                                </div>
+            {isInProgress && progress > 0 && (
+                <div
+                    className="
+                        mt-3
+                        h-1
+                        rounded-full
+                        bg-white/5
+                        overflow-hidden
+                    "
+                >
+                    <div
+                        className="
+                            h-full
+                            rounded-full
+                            bg-gradient-to-r
+                            from-cyan-400
+                            to-blue-400
+                            transition-all
+                            duration-500
+                        "
+                        style={{
+                            width: `${progress}%`,
+                        }}
+                    />
+                </div>
+            )}
+
+            {/* ================================
+                PREREQUISITES
+            ================================= */}
+
+            {isLocked &&
+                prereqs?.required?.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-white/5">
+                        <p className="text-[10px] text-red-400/70 mb-2">
+                            🔒 پیش‌نیازها
+                        </p>
+
+                        <div className="flex flex-wrap gap-1">
+                            {prereqs.required.map(
+                                (requirement) => (
+                                    <span
+                                        key={
+                                            requirement.id
+                                        }
+                                        className={`
+                                            text-[10px]
+                                            px-1.5
+                                            py-0.5
+                                            rounded-full
+
+                                            ${
+                                                requirement.completed
+                                                    ? `
+                                                        bg-emerald-400/10
+                                                        text-emerald-400
+                                                    `
+                                                    : `
+                                                        bg-red-400/10
+                                                        text-red-400
+                                                    `
+                                            }
+                                        `}
+                                    >
+                                        {requirement.completed
+                                            ? "✅"
+                                            : "⬜"}{" "}
+                                        {
+                                            requirement.title
+                                        }
+                                    </span>
+                                )
                             )}
                         </div>
-                    </motion.div>
+                    </div>
                 )}
-            </AnimatePresence>
         </Link>
     );
 }

@@ -4,13 +4,17 @@ import App from "./App";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import { QuizProvider } from "./context/QuizContext";
+import { AuthProvider } from "./context/AuthContext";
 ReactDOM.createRoot(document.getElementById("root")).render(
-    <QuizProvider>
-        {/* <React.StrictMode> */}
+    <AuthProvider>
+        <QuizProvider>
+            {/* <React.StrictMode> */}
             <BrowserRouter>
                 <App />
             </BrowserRouter>
-        {/* </React.StrictMode> */}
-    </QuizProvider>
+            {/* </React.StrictMode> */}
+        </QuizProvider>
+    </AuthProvider>
+
 
 );

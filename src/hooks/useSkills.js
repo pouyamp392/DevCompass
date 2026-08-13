@@ -1,192 +1,772 @@
-import { useState, useContext, useMemo, useCallback } from "react";
+import {
+    useState,
+    useContext,
+    useMemo,
+    useCallback,
+} from "react";
+
 import QuizContext from "../context/QuizContext";
-import { skills } from "../data/skills";
 import { CATEGORIES } from "../constants/categories";
 
 export function useSkills() {
-    const { progress } = useContext(QuizContext);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [sortBy, setSortBy] = useState("progress");
-    const [expandedCategories, setExpandedCategories] = useState(
-        CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.id]: false }), {})
-    );
-    const [hoveredSkill, setHoveredSkill] = useState(null);
+    const {
+        skills,
+        skillsLoading,
+        skillsError,
+        progress,
+    } = useContext(QuizContext);
 
-    // ===== DATA =====
-    const allSkills = useMemo(() => skills, []);
+    // ========================================
+    // STATE
+    // ========================================
 
-    const skillsMap = useMemo(() => {
-        return Object.fromEntries(allSkills.map(s => [s.id, s]));
-    }, [allSkills]);
+    const [searchTerm, setSearchTerm] =
+        useState("");
 
-    // ===== SKILL STATUS =====
-    const getSkillStatus = useCallback((skill) => {
-        const value = progress?.[skill.id] || 0;
-        if (value >= 100) return "completed";
-        if (value > 0) return "in-progress";
+    const [sortBy, setSortBy] =
+        useState("progress");
 
-        const requires = skill.requires || [];
-        if (requires.length === 0) return "available";
-
-        const hasUncompletedRequired = requires.some(
-            reqId => (progress?.[reqId] || 0) < 100
+    const [expandedCategories, setExpandedCategories] =
+        useState(
+            CATEGORIES.reduce(
+                (acc, category) => ({
+                    ...acc,
+                    [category.id]: false,
+                }),
+                {}
+            )
         );
 
-        return hasUncompletedRequired ? "locked" : "available";
-    }, [progress]);
+    const [hoveredSkill, setHoveredSkill] =
+        useState(null);
 
-    // ===== PREREQUISITES =====
-    const getPrerequisiteDetails = useCallback((skill) => {
-        const required = (skill.requires || []).map(reqId => ({
-            id: reqId,
-            title: skillsMap[reqId]?.title || reqId,
-            icon: skillsMap[reqId]?.icon || "📘",
-            completed: (progress?.[reqId] || 0) >= 100,
-            type: "required",
-        }));
+    // ========================================
+    // DATA
+    // ========================================
 
-        const recommended = (skill.recommended || []).map(recId => ({
-            id: recId,
-            title: skillsMap[recId]?.title || recId,
-            icon: skillsMap[recId]?.icon || "📘",
-            completed: (progress?.[recId] || 0) >= 100,
-            type: "recommended",
-        }));
+    const allSkills = Array.isArray(skills)
+        ? skills
+        : [];
 
-        return { required, recommended };
-    }, [skillsMap, progress]);
+    // ========================================
+    // SKILLS MAP
+    // ========================================
 
-    // ===== SKILL PATH =====
-    const buildSkillPath = useCallback((skillId) => {
-        const path = [];
-        let currentId = skillId;
-        const visited = new Set();
+    const skillsMap = useMemo(() => {
+        return Object.fromEntries(
+            allSkills.map((skill) => [
+                String(skill.id),
+                skill,
+            ])
+        );
+    }, [allSkills]);
 
-        while (currentId && !visited.has(currentId)) {
-            visited.add(currentId);
-            const skill = skillsMap[currentId];
-            if (!skill) break;
+    // ========================================
+    // SKILL STATUS
+    // ========================================
 
-            path.unshift({
-                id: skill.id,
-                title: skill.title,
-                icon: skill.icon || "📘",
-                completed: (progress?.[skill.id] || 0) >= 100,
-                inProgress: (progress?.[skill.id] || 0) > 0 && (progress?.[skill.id] || 0) < 100,
-            });
-
-            if (skill.requires?.length > 0) {
-                currentId = skill.requires[0];
-            } else {
-                break;
+    const getSkillStatus = useCallback(
+        (skill) => {
+            if (!skill) {
+                return "locked";
             }
-        }
 
-        return path;
-    }, [skillsMap, progress]);
+            const skillId =
+                String(skill.id);
 
-    // ===== CURRENT SKILLS =====
-    const currentSkills = useMemo(() => {
-        return allSkills
-            .filter(s => {
-                const status = getSkillStatus(s);
-                return status === "in-progress" || status === "available";
-            })
-            .slice(0, 3);
-    }, [allSkills, getSkillStatus]);
+            const value =
+                Number(
+                    progress?.[skillId]
+                ) || 0;
 
-    // ===== CATEGORIZED SKILLS =====
-    const categorizedSkills = useMemo(() => {
-        const result = CATEGORIES.map(cat => {
-            const skills = allSkills.filter(skill => {
-                const matchesCategory = cat.skillCategories.includes(skill.category);
-                const matchesGoal = skill.goals?.some(g => cat.goals.includes(g));
-                return matchesCategory || matchesGoal;
-            });
+            // Completed
+            if (value >= 100) {
+                return "completed";
+            }
 
-            const filtered = searchTerm
-                ? skills.filter(s =>
-                    s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    s.description.toLowerCase().includes(searchTerm.toLowerCase())
+            // In progress
+            if (value > 0) {
+                return "in-progress";
+            }
+
+            // Prerequisites
+            const requires =
+                Array.isArray(
+                    skill.requires
                 )
-                : skills;
+                    ? skill.requires
+                    : [];
 
-            const sorted = [...filtered].sort((a, b) => {
-                switch (sortBy) {
-                    case "progress":
-                        return (progress?.[b.id] || 0) - (progress?.[a.id] || 0);
-                    case "difficulty":
-                        return (b.difficulty || 0) - (a.difficulty || 0);
-                    case "xp":
-                        return (b.xp || 0) - (a.xp || 0);
-                    case "name":
-                        return a.title.localeCompare(b.title);
-                    default:
-                        return 0;
+            // No prerequisites
+            if (requires.length === 0) {
+                return "available";
+            }
+
+            // Check prerequisites
+            const hasUncompletedRequired =
+                requires.some(
+                    (reqId) =>
+                        (
+                            Number(
+                                progress?.[
+                                    String(
+                                        reqId
+                                    )
+                                ]
+                            ) || 0
+                        ) < 100
+                );
+
+            return hasUncompletedRequired
+                ? "locked"
+                : "available";
+        },
+        [progress]
+    );
+
+    // ========================================
+    // PREREQUISITES
+    // ========================================
+
+    const getPrerequisiteDetails =
+        useCallback(
+            (skill) => {
+                if (!skill) {
+                    return {
+                        required: [],
+                        recommended: [],
+                    };
                 }
-            });
 
-            const completed = sorted.filter(s => getSkillStatus(s) === "completed").length;
-            const inProgress = sorted.filter(s => getSkillStatus(s) === "in-progress").length;
-            const locked = sorted.filter(s => getSkillStatus(s) === "locked").length;
+                // Required
+                const required =
+                    (
+                        Array.isArray(
+                            skill.requires
+                        )
+                            ? skill.requires
+                            : []
+                    ).map((reqId) => {
+                        const id =
+                            String(reqId);
+
+                        const requiredSkill =
+                            skillsMap[id];
+
+                        return {
+                            id,
+
+                            title:
+                                requiredSkill?.title ||
+                                id,
+
+                            icon:
+                                requiredSkill?.icon ||
+                                "📘",
+
+                            completed:
+                                (
+                                    Number(
+                                        progress?.[
+                                            id
+                                        ]
+                                    ) || 0
+                                ) >= 100,
+
+                            type: "required",
+                        };
+                    });
+
+                // Recommended
+                const recommended =
+                    (
+                        Array.isArray(
+                            skill.recommended
+                        )
+                            ? skill.recommended
+                            : []
+                    ).map((recId) => {
+                        const id =
+                            String(recId);
+
+                        const recommendedSkill =
+                            skillsMap[id];
+
+                        return {
+                            id,
+
+                            title:
+                                recommendedSkill?.title ||
+                                id,
+
+                            icon:
+                                recommendedSkill?.icon ||
+                                "📘",
+
+                            completed:
+                                (
+                                    Number(
+                                        progress?.[
+                                            id
+                                        ]
+                                    ) || 0
+                                ) >= 100,
+
+                            type: "recommended",
+                        };
+                    });
+
+                return {
+                    required,
+                    recommended,
+                };
+            },
+            [skillsMap, progress]
+        );
+
+    // ========================================
+    // SKILL PATH
+    // ========================================
+
+    const buildSkillPath =
+        useCallback(
+            (skillId) => {
+                const path = [];
+
+                let currentId =
+                    String(skillId);
+
+                const visited =
+                    new Set();
+
+                while (
+                    currentId &&
+                    !visited.has(
+                        currentId
+                    )
+                ) {
+                    visited.add(
+                        currentId
+                    );
+
+                    const skill =
+                        skillsMap[
+                            currentId
+                        ];
+
+                    if (!skill) {
+                        break;
+                    }
+
+                    const value =
+                        Number(
+                            progress?.[
+                                String(
+                                    skill.id
+                                )
+                            ]
+                        ) || 0;
+
+                    path.unshift({
+                        id: skill.id,
+
+                        title: skill.title,
+
+                        icon:
+                            skill.icon ||
+                            "📘",
+
+                        completed:
+                            value >= 100,
+
+                        inProgress:
+                            value > 0 &&
+                            value < 100,
+                    });
+
+                    const requires =
+                        Array.isArray(
+                            skill.requires
+                        )
+                            ? skill.requires
+                            : [];
+
+                    if (
+                        requires.length >
+                        0
+                    ) {
+                        currentId =
+                            String(
+                                requires[0]
+                            );
+                    } else {
+                        break;
+                    }
+                }
+
+                return path;
+            },
+            [skillsMap, progress]
+        );
+
+    // ========================================
+    // CURRENT SKILLS
+    // ========================================
+
+    const currentSkills =
+        useMemo(() => {
+            return allSkills
+                .filter((skill) => {
+                    const status =
+                        getSkillStatus(
+                            skill
+                        );
+
+                    return (
+                        status ===
+                            "in-progress" ||
+                        status ===
+                            "available"
+                    );
+                })
+                .slice(0, 3);
+        }, [
+            allSkills,
+            getSkillStatus,
+        ]);
+
+    // ========================================
+    // CATEGORIZED SKILLS
+    // ========================================
+
+    const categorizedSkills =
+        useMemo(() => {
+            const result =
+                CATEGORIES.map(
+                    (category) => {
+                        // -------------------------
+                        // Category filter
+                        // -------------------------
+
+                        const categorySkills =
+                            allSkills.filter(
+                                (skill) => {
+                                    const matchesCategory =
+                                        Array.isArray(
+                                            category.skillCategories
+                                        ) &&
+                                        category.skillCategories.includes(
+                                            skill.category
+                                        );
+
+                                    const matchesGoal =
+                                        Array.isArray(
+                                            skill.goals
+                                        ) &&
+                                        Array.isArray(
+                                            category.goals
+                                        ) &&
+                                        skill.goals.some(
+                                            (goal) =>
+                                                category.goals.includes(
+                                                    goal
+                                                )
+                                        );
+
+                                    return (
+                                        matchesCategory ||
+                                        matchesGoal
+                                    );
+                                }
+                            );
+
+                        // -------------------------
+                        // Search
+                        // -------------------------
+
+                        const search =
+                            searchTerm
+                                .toLowerCase()
+                                .trim();
+
+                        const filtered =
+                            search
+                                ? categorySkills.filter(
+                                      (
+                                          skill
+                                      ) => {
+                                          const title =
+                                              String(
+                                                  skill.title ||
+                                                      ""
+                                              ).toLowerCase();
+
+                                          const description =
+                                              String(
+                                                  skill.description ||
+                                                      ""
+                                              ).toLowerCase();
+
+                                          return (
+                                              title.includes(
+                                                  search
+                                              ) ||
+                                              description.includes(
+                                                  search
+                                              )
+                                          );
+                                      }
+                                  )
+                                : categorySkills;
+
+                        // -------------------------
+                        // Sort
+                        // -------------------------
+
+                        const sorted =
+                            [
+                                ...filtered,
+                            ].sort(
+                                (
+                                    a,
+                                    b
+                                ) => {
+                                    switch (
+                                        sortBy
+                                    ) {
+                                        case "progress":
+                                            return (
+                                                (
+                                                    Number(
+                                                        progress?.[
+                                                            String(
+                                                                b.id
+                                                            )
+                                                        ]
+                                                    ) ||
+                                                    0
+                                                ) -
+                                                (
+                                                    Number(
+                                                        progress?.[
+                                                            String(
+                                                                a.id
+                                                            )
+                                                        ]
+                                                    ) ||
+                                                    0
+                                                )
+                                            );
+
+                                        case "difficulty":
+                                            return (
+                                                (
+                                                    Number(
+                                                        b.difficulty
+                                                    ) ||
+                                                    0
+                                                ) -
+                                                (
+                                                    Number(
+                                                        a.difficulty
+                                                    ) ||
+                                                    0
+                                                )
+                                            );
+
+                                        case "xp":
+                                            return (
+                                                (
+                                                    Number(
+                                                        b.xp
+                                                    ) ||
+                                                    0
+                                                ) -
+                                                (
+                                                    Number(
+                                                        a.xp
+                                                    ) ||
+                                                    0
+                                                )
+                                            );
+
+                                        case "name":
+                                            return String(
+                                                a.title ||
+                                                    ""
+                                            ).localeCompare(
+                                                String(
+                                                    b.title ||
+                                                        ""
+                                                )
+                                            );
+
+                                        default:
+                                            return 0;
+                                    }
+                                }
+                            );
+
+                        // -------------------------
+                        // Stats
+                        // -------------------------
+
+                        const completed =
+                            sorted.filter(
+                                (
+                                    skill
+                                ) =>
+                                    getSkillStatus(
+                                        skill
+                                    ) ===
+                                    "completed"
+                            ).length;
+
+                        const inProgress =
+                            sorted.filter(
+                                (
+                                    skill
+                                ) =>
+                                    getSkillStatus(
+                                        skill
+                                    ) ===
+                                    "in-progress"
+                            ).length;
+
+                        const locked =
+                            sorted.filter(
+                                (
+                                    skill
+                                ) =>
+                                    getSkillStatus(
+                                        skill
+                                    ) ===
+                                    "locked"
+                            ).length;
+
+                        const available =
+                            sorted.length -
+                            completed -
+                            inProgress -
+                            locked;
+
+                        const categoryProgress =
+                            sorted.length >
+                            0
+                                ? Math.round(
+                                      (
+                                          completed /
+                                          sorted.length
+                                      ) *
+                                          100
+                                  )
+                                : 0;
+
+                        return {
+                            ...category,
+
+                            skills:
+                                sorted,
+
+                            stats: {
+                                total:
+                                    sorted.length,
+
+                                completed,
+
+                                inProgress,
+
+                                locked,
+
+                                available,
+
+                                progress:
+                                    categoryProgress,
+                            },
+                        };
+                    }
+                );
+
+            return result.filter(
+                (category) =>
+                    category.skills
+                        .length > 0
+            );
+        }, [
+            allSkills,
+            progress,
+            searchTerm,
+            sortBy,
+            getSkillStatus,
+        ]);
+
+    // ========================================
+    // GLOBAL STATS
+    // ========================================
+
+    const globalStats =
+        useMemo(() => {
+            const completed =
+                allSkills.filter(
+                    (skill) =>
+                        getSkillStatus(
+                            skill
+                        ) ===
+                        "completed"
+                ).length;
+
+            const inProgress =
+                allSkills.filter(
+                    (skill) =>
+                        getSkillStatus(
+                            skill
+                        ) ===
+                        "in-progress"
+                ).length;
+
+            const total =
+                allSkills.length;
+
+            const earnedXP =
+                allSkills
+                    .filter(
+                        (skill) =>
+                            getSkillStatus(
+                                skill
+                            ) ===
+                            "completed"
+                    )
+                    .reduce(
+                        (
+                            acc,
+                            skill
+                        ) =>
+                            acc +
+                            (
+                                Number(
+                                    skill.xp
+                                ) ||
+                                Number(
+                                    skill.difficulty
+                                ) *
+                                    100 ||
+                                100
+                            ),
+                        0
+                    );
+
+            const totalXP =
+                allSkills.reduce(
+                    (
+                        acc,
+                        skill
+                    ) =>
+                        acc +
+                        (
+                            Number(
+                                skill.xp
+                            ) ||
+                            Number(
+                                skill.difficulty
+                            ) *
+                                100 ||
+                            100
+                        ),
+                    0
+                );
+
+            const level =
+                Math.floor(
+                    completed / 3
+                ) + 1;
 
             return {
-                ...cat,
-                skills: sorted,
-                stats: {
-                    total: sorted.length,
-                    completed,
-                    inProgress,
-                    locked,
-                    available: sorted.length - completed - inProgress - locked,
-                    progress: sorted.length > 0 ? Math.round((completed / sorted.length) * 100) : 0,
-                },
+                completed,
+                inProgress,
+                total,
+                earnedXP,
+                totalXP,
+                level,
             };
-        });
+        }, [
+            allSkills,
+            getSkillStatus,
+        ]);
 
-        return result.filter(cat => cat.skills.length > 0);
-    }, [allSkills, progress, searchTerm, sortBy, getSkillStatus]);
+    // ========================================
+    // TOGGLE CATEGORY
+    // ========================================
 
-    // ===== GLOBAL STATS =====
-    const globalStats = useMemo(() => {
-        const completed = allSkills.filter(s => getSkillStatus(s) === "completed").length;
-        const inProgress = allSkills.filter(s => getSkillStatus(s) === "in-progress").length;
-        const total = allSkills.length;
-        const earnedXP = allSkills
-            .filter(s => getSkillStatus(s) === "completed")
-            .reduce((acc, s) => acc + (s.xp || s.difficulty * 100 || 100), 0);
-        const totalXP = allSkills.reduce((acc, s) => acc + (s.xp || s.difficulty * 100 || 100), 0);
-        const level = Math.floor(completed / 3) + 1;
+    const toggleCategory =
+        useCallback(
+            (categoryId) => {
+                setExpandedCategories(
+                    (previous) => ({
+                        ...previous,
 
-        return { completed, inProgress, total, earnedXP, totalXP, level };
-    }, [allSkills, getSkillStatus]);
+                        [categoryId]:
+                            !previous[
+                                categoryId
+                            ],
+                    })
+                );
+            },
+            []
+        );
 
-    // ===== TOGGLE =====
-    const toggleCategory = useCallback((categoryId) => {
-        setExpandedCategories(prev => ({
-            ...prev,
-            [categoryId]: !prev[categoryId],
-        }));
-    }, []);
+    // ========================================
+    // RETURN
+    // ========================================
 
     return {
+        // --------------------------------
+        // Loading / Error
+        // --------------------------------
+
+        loading: skillsLoading,
+        error: skillsError,
+
+        // --------------------------------
         // State
+        // --------------------------------
+
         searchTerm,
         setSearchTerm,
+
         sortBy,
         setSortBy,
+
         expandedCategories,
+
         hoveredSkill,
         setHoveredSkill,
+
+        // --------------------------------
         // Data
+        // --------------------------------
+
         allSkills,
         skillsMap,
+
+        // --------------------------------
+        // User Progress
+        // --------------------------------
+
+        progress,
+
+        // --------------------------------
         // Functions
+        // --------------------------------
+
         getSkillStatus,
         getPrerequisiteDetails,
         buildSkillPath,
         toggleCategory,
+
+        // --------------------------------
         // Derived
+        // --------------------------------
+
         currentSkills,
         categorizedSkills,
         globalStats,

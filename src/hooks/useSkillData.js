@@ -4,114 +4,332 @@ import QuizContext from "../context/QuizContext";
 
 export function useSkillData() {
     const { id } = useParams();
-    const { roadmap, progress } = useContext(QuizContext);
 
-    const allSkills = roadmap.flatMap(stage => stage.skills);
-    const skill = allSkills.find(skill => skill.id === id);
+    const {
+        roadmap,
+        progress,
+        updateProgress,
+        allSkills,
+        totalSkills,
+        roadmapProgress,
+    } = useContext(QuizContext);
 
-    // محاسبه درصد کل مسیر
-    const totalSkills = allSkills.length;
-    const completedSkills = allSkills.filter(s => (progress?.[s.id] || 0) >= 100).length;
-    const overallProgress = Math.floor((completedSkills / totalSkills) * 100);
+    // --------------------------------
+    // Current skill
+    // --------------------------------
 
-    // پیدا کردن مرحله فعلی و بعدی
-    const currentStage = roadmap.find(stage =>
-        stage.skills.some(s => s.id === skill?.id)
+    const skill = allSkills.find(
+        (item) => String(item.id) === String(id)
     );
-    const currentStageIndex = roadmap.indexOf(currentStage);
-    const nextStage = roadmap[currentStageIndex + 1];
 
-    // پیدا کردن مهارت‌های بعدی در همین مرحله
-    const currentStageSkills = currentStage?.skills || [];
-    const currentSkillIndex = currentStageSkills.findIndex(s => s.id === skill?.id);
-    const nextSkillsInStage = currentStageSkills.slice(currentSkillIndex + 1);
+    const skillProgress = Number(
+        progress?.[skill?.id] || 0
+    );
 
-    // پیشنهاد مهارت بعدی
+    // --------------------------------
+    // Difficulty
+    // --------------------------------
+
+    const difficultyLabels = {
+        1: "آسون",
+        2: "متوسط",
+        3: "سخت",
+        4: "خیلی سخت",
+        5: "افسانه‌ای",
+    };
+
+    const diffText =
+        difficultyLabels[Number(skill?.difficulty)] ||
+        "نامشخص";
+
+    // --------------------------------
+    // Overall roadmap progress
+    // --------------------------------
+
+    const overallProgress = roadmapProgress;
+
+    // --------------------------------
+    // Prerequisites
+    // --------------------------------
+
+    const requires = allSkills.filter((item) =>
+        skill?.requires?.includes(item.id)
+    );
+
+    // --------------------------------
+    // Check prerequisite
+    // --------------------------------
+
+    const hasCompletedPrerequisites = (targetSkill) => {
+        const requiredSkills = allSkills.filter((item) =>
+            targetSkill?.requires?.includes(item.id)
+        );
+
+        return requiredSkills.every(
+            (requiredSkill) =>
+                Number(progress?.[requiredSkill.id] || 0) >= 100
+        );
+    };
+
+    // --------------------------------
+    // Current and next stage
+    // --------------------------------
+
+    const currentStage =
+        roadmap.find((stage) =>
+            stage.skills?.some(
+                (item) => item.id === skill?.id
+            )
+        ) || null;
+
+    const currentStageIndex = currentStage
+        ? roadmap.indexOf(currentStage)
+        : -1;
+
+    const nextStage =
+        currentStageIndex >= 0
+            ? roadmap[currentStageIndex + 1] || null
+            : null;
+
+    // --------------------------------
+    // Next skills in current stage
+    // --------------------------------
+
+    const currentStageSkills =
+        currentStage?.skills || [];
+
+    const currentSkillIndex =
+        currentStageSkills.findIndex(
+            (item) => item.id === skill?.id
+        );
+
+    const nextSkillsInStage =
+        currentSkillIndex >= 0
+            ? currentStageSkills.slice(
+                  currentSkillIndex + 1
+              )
+            : [];
+
+    // --------------------------------
+    // Suggested skills
+    // --------------------------------
+
     const getNextSuggestedSkills = () => {
         const suggested = [];
-        if (nextSkillsInStage.length > 0) {
-            suggested.push(...nextSkillsInStage.slice(0, 2));
+
+        // First: skills later in current stage
+        for (const candidate of nextSkillsInStage) {
+            if (suggested.length >= 2) break;
+
+            const candidateProgress =
+                Number(progress?.[candidate.id] || 0);
+
+            if (
+                candidateProgress === 0 &&
+                hasCompletedPrerequisites(candidate)
+            ) {
+                suggested.push(candidate);
+            }
         }
+
+        // Then: skills from next stage
         if (suggested.length < 2 && nextStage) {
-            const nextStageSkills = nextStage.skills || [];
-            suggested.push(...nextStageSkills.slice(0, 2 - suggested.length));
+            const nextStageSkills =
+                nextStage.skills || [];
+
+            for (const candidate of nextStageSkills) {
+                if (suggested.length >= 2) break;
+
+                const candidateProgress =
+                    Number(progress?.[candidate.id] || 0);
+
+                if (
+                    candidateProgress === 0 &&
+                    hasCompletedPrerequisites(candidate)
+                ) {
+                    suggested.push(candidate);
+                }
+            }
         }
+
         return suggested;
     };
 
-    const suggestedSkills = getNextSuggestedSkills();
+    const suggestedSkills =
+        getNextSuggestedSkills();
 
-    // وضعیت مهارت
+    // --------------------------------
+    // Skill status
+    // --------------------------------
+
     const getSkillStatus = () => {
-        const skillProgress = progress?.[skill?.id] || 0;
-        const requires = allSkills.filter(item => skill?.requires?.includes(item.id));
-
         if (skillProgress >= 100) {
-            return { label: "کامل شده ✅", className: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" };
-        } else if (skillProgress > 0) {
-            return { label: "در حال یادگیری 🚀", className: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400" };
-        } else {
-            const hasUncompletedPrereq = requires.some(req => (progress?.[req.id] || 0) < 100);
-            if (hasUncompletedPrereq) {
-                return { label: "قفل شده 🔒", className: "bg-red-500/10 border-red-500/20 text-red-400" };
-            }
-            return { label: "آماده شروع ✨", className: "bg-green-500/10 border-green-500/20 text-green-400" };
+            return {
+                label: "کامل شده ✅",
+                className:
+                    "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+            };
         }
+
+        if (skillProgress > 0) {
+            return {
+                label: "در حال یادگیری 🚀",
+                className:
+                    "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
+            };
+        }
+
+        const prerequisitesCompleted =
+            hasCompletedPrerequisites(skill);
+
+        if (!prerequisitesCompleted) {
+            return {
+                label: "قفل شده 🔒",
+                className:
+                    "bg-red-500/10 border-red-500/20 text-red-400",
+            };
+        }
+
+        return {
+            label: "آماده شروع ✨",
+            className:
+                "bg-green-500/10 border-green-500/20 text-green-400",
+        };
     };
 
-    // دکمه شروع داینامیک
+    const status = getSkillStatus();
+
+    // --------------------------------
+    // Button
+    // --------------------------------
+
     const getButtonText = () => {
-        const skillProgress = progress?.[skill?.id] || 0;
-        if (skillProgress >= 100) return "✅ کامل شده";
-        if (skillProgress > 0) return "⏳ ادامه یادگیری";
+        if (skillProgress >= 100) {
+            return "✅ کامل شده";
+        }
+
+        if (skillProgress > 0) {
+            return "⏳ ادامه یادگیری";
+        }
+
         return "🚀 شروع یادگیری";
     };
 
-    const isButtonDisabled = () => {
-        const skillProgress = progress?.[skill?.id] || 0;
-        const status = getSkillStatus();
-        return skillProgress >= 100 || status.label === "قفل شده 🔒";
-    };
+    const isButtonDisabled =
+        skillProgress >= 100 ||
+        status.label === "قفل شده 🔒";
 
-    // تخمین زمان پایان
+    // --------------------------------
+    // Estimate end date
+    // --------------------------------
+
     const estimateEndDate = () => {
-        const skillProgress = progress?.[skill?.id] || 0;
-        if (skillProgress >= 100) return "تموم شده! 🎉";
+        if (!skill) return null;
 
-        const remainingDays = Math.max(0, skill.time - (skill.time * (skillProgress / 100)));
+        if (skillProgress >= 100) {
+            return "تموم شده! 🎉";
+        }
+
+        const skillTime = Number(skill.time || 0);
+
+        const remainingDays = Math.max(
+            0,
+            skillTime -
+                skillTime *
+                    (skillProgress / 100)
+        );
+
         const dailyHours = 2;
-        const totalHours = remainingDays * dailyHours;
 
-        if (remainingDays <= 0) return "امروز تموم میشه! 🔥";
-        if (remainingDays < 1) return `${Math.ceil(totalHours)} ساعت دیگه ⏰`;
-        if (remainingDays < 7) return `${Math.ceil(remainingDays)} روز دیگه 📅`;
-        if (remainingDays < 30) return `${Math.ceil(remainingDays / 7)} هفته دیگه 📆`;
-        return `${Math.ceil(remainingDays / 30)} ماه دیگه 🗓️`;
+        const totalHours =
+            remainingDays * dailyHours;
+
+        if (remainingDays <= 0) {
+            return "امروز تموم میشه! 🔥";
+        }
+
+        if (remainingDays < 1) {
+            return `${Math.ceil(
+                totalHours
+            )} ساعت دیگه ⏰`;
+        }
+
+        if (remainingDays < 7) {
+            return `${Math.ceil(
+                remainingDays
+            )} روز دیگه 📅`;
+        }
+
+        if (remainingDays < 30) {
+            return `${Math.ceil(
+                remainingDays / 7
+            )} هفته دیگه 📆`;
+        }
+
+        return `${Math.ceil(
+            remainingDays / 30
+        )} ماه دیگه 🗓️`;
     };
 
-    const skillProgress = progress?.[skill?.id] || 0;
-    const requires = allSkills.filter(item => skill?.requires?.includes(item.id));
+    // --------------------------------
+    // Update progress
+    // --------------------------------
+
+    const handleProgressUpdate = async (value) => {
+        if (!skill?.id) return;
+
+        await updateProgress(
+            skill.id,
+            value
+        );
+    };
+
+    // --------------------------------
+    // Return
+    // --------------------------------
 
     return {
         id,
+
+        // Current skill
         skill,
-        allSkills,
-        progress,
-        roadmap,
-        requires,
         skillProgress,
+        diffText,
+
+        // Roadmap
+        roadmap,
+        allSkills,
+        totalSkills,
+
+        // Progress
+        progress,
         overallProgress,
+
+        // Prerequisites
+        requires,
+        hasCompletedPrerequisites,
+
+        // Stages
         currentStage,
         currentStageIndex,
         nextStage,
         nextSkillsInStage,
+
+        // Suggestions
         suggestedSkills,
+
+        // Status
+        status,
         getSkillStatus,
+
+        // Button
         getButtonText,
-        isButtonDisabled: isButtonDisabled(),
+        isButtonDisabled,
+
+        // Estimate
         estimateEndDate,
-        status: getSkillStatus(),
-        totalSkills,
-        completedSkills
+
+        // Action
+        handleProgressUpdate,
     };
 }

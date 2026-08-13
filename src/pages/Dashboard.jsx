@@ -1,484 +1,750 @@
 import { Link } from "react-router-dom";
 import {
-    Flame,
-    Trophy,
-    Rocket,
-    Map,
+    Award,
     BookOpen,
     CheckCircle2,
-    Lock,
-    TrendingUp,
-    Sparkles,
     ChevronLeft,
-    Target,
-    Zap,
-    Award,
+    Circle,
+    Flame,
+    Gauge,
+    Lock,
+    Map,
     PartyPopper,
+    Play,
+    Rocket,
+    Sparkles,
+    Target,
+    Trophy,
+    Zap,
 } from "lucide-react";
 
 import Scene from "../components/ui/Scene";
 import { useDashboardData } from "../hooks/useDashboardData";
 
+const DAILY_GOAL_MINUTES = 60;
+
+function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+}
+
+function ProgressBar({
+    value = 0,
+    className = "",
+    barClassName = "bg-gradient-to-l from-cyan-400 to-blue-500",
+}) {
+    const safeValue = clamp(Number(value) || 0, 0, 100);
+
+    return (
+        <div className={`h-2 overflow-hidden rounded-full bg-white/5 ${className}`}>
+            <div
+                className={`h-full rounded-full transition-all duration-700 ${barClassName}`}
+                style={{ width: `${safeValue}%` }}
+            />
+        </div>
+    );
+}
+
+function StatCard({ label, value, helper, icon: Icon, iconClassName }) {
+    return (
+        <article className="rounded-2xl border border-white/5 bg-zinc-950/45 p-5 backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-medium text-zinc-500">{label}</span>
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.04]">
+                    <Icon className={`h-4 w-4 ${iconClassName}`} />
+                </span>
+            </div>
+
+            <p className="mt-3 text-2xl font-black text-white">{value}</p>
+
+            {helper && (
+                <p className="mt-1 text-xs leading-5 text-zinc-600">{helper}</p>
+            )}
+        </article>
+    );
+}
+
+function EmptyDashboard() {
+    return (
+        <>
+            <Scene variant="result" />
+
+            <main className="relative z-10 flex min-h-screen items-center justify-center px-6 py-20 text-white">
+                <section className="w-full max-w-lg rounded-[2rem] border border-cyan-400/15 bg-zinc-950/60 p-8 text-center backdrop-blur-2xl">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10">
+                        <Rocket className="h-8 w-8 text-cyan-400" />
+                    </div>
+
+                    <h1 className="mt-5 text-2xl font-black">
+                        هنوز مسیر یادگیریت ساخته نشده
+                    </h1>
+
+                    <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-zinc-500">
+                        اول کوییز رو تکمیل کن تا DevCompass بر اساس هدف و سطح فعلیت،
+                        یک نقشه راه شخصی برات بسازه.
+                    </p>
+
+                    <Link
+                        to="/quiz"
+                        className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-cyan-400 px-7 py-3.5 font-bold text-black transition hover:bg-cyan-300 active:scale-[0.98]"
+                    >
+                        شروع کوییز
+                        <ChevronLeft className="h-4 w-4" />
+                    </Link>
+                </section>
+            </main>
+        </>
+    );
+}
+
 export default function Dashboard() {
     const {
-        allSkills,
-        completedSkills,
-        inProgressSkills,
-        lockedSkills,
-        currentSkill,
-        nextSkill,
-        totalXP,
-        roadmapProgress,
-        currentStage,
-        recentSkills,
-        skillProgress,
-        achievements,
-        unlockedAchievements,
-        nextAchievement,
-        dailyProgress,
+        allSkills = [],
+        completedSkills = [],
+        inProgressSkills = [],
+        lockedSkills = [],
+        currentSkill = null,
+        nextSkill = null,
+        totalXP = 0,
+        roadmapProgress = 0,
+        currentStage = null,
+        recentSkills = [],
+        skillProgress = 0,
+        achievements = [],
+        unlockedAchievements = [],
+        nextAchievement = null,
+        dailyProgress = 0,
         setDailyProgress,
-        streakDays,
-        progress,
+        streakDays = 0,
+        progress = {},
     } = useDashboardData();
 
-    // ===== حالت خالی: کاربر هنوز روردمپی نداره =====
-    if (!allSkills || allSkills.length === 0) {
-        return (
-            <>
-                <Scene variant="result" />
-                <section className="relative z-10 min-h-screen flex items-center justify-center px-6">
-                    <div className="max-w-md text-center space-y-5">
-                        <div className="mx-auto w-16 h-16 rounded-2xl bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center">
-                            <Rocket className="w-8 h-8 text-cyan-400" />
-                        </div>
-                        <h1 className="text-2xl font-black text-white">
-                            هنوز نقشه‌راهی برات ساخته نشده
-                        </h1>
-                        <p className="text-zinc-500 text-sm leading-7">
-                            برای دیدن داشبورد، اول باید کوییز رو پر کنی تا مسیر
-                            یادگیری متناسب با علاقه‌ات ساخته بشه.
-                        </p>
-                        <Link
-                            to="/quiz"
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-cyan-400 text-black font-bold hover:bg-cyan-300 transition-all"
-                        >
-                            شروع کوییز
-                            <ChevronLeft className="w-4 h-4" />
-                        </Link>
-                    </div>
-                </section>
-            </>
-        );
+    if (!allSkills.length) {
+        return <EmptyDashboard />;
     }
 
     const isAllCompleted = completedSkills.length === allSkills.length;
-    const activeSkill = currentSkill || nextSkill;
-    const isInProgress = currentSkill !== null;
+    const activeSkill = currentSkill || nextSkill || allSkills[0] || null;
+    const isInProgress = Boolean(currentSkill);
+
+    const activeSkillProgress = isInProgress
+        ? clamp(Number(skillProgress) || 0, 0, 100)
+        : clamp(Number(progress?.[activeSkill?.id]) || 0, 0, 100);
+
+    const dailyGoalProgress = clamp(
+        (Number(dailyProgress) / DAILY_GOAL_MINUTES) * 100,
+        0,
+        100
+    );
+
+    const pathPreview = allSkills
+        .filter((skill) => {
+            const value = Number(progress?.[skill.id]) || 0;
+
+            return (
+                value > 0 ||
+                skill.id === activeSkill?.id ||
+                skill.requires?.includes(activeSkill?.id) ||
+                activeSkill?.requires?.includes(skill.id)
+            );
+        })
+        .slice(0, 6);
+
+    const dailyMissions = [
+        {
+            id: "study",
+            label: "حداقل ۳۰ دقیقه مطالعه",
+            completed: Number(dailyProgress) >= 30,
+        },
+        {
+            id: "skill",
+            label: isInProgress
+                ? `ادامه‌ی ${activeSkill?.title || "مهارت فعلی"}`
+                : `شروع ${activeSkill?.title || "مهارت بعدی"}`,
+            completed: isInProgress && activeSkillProgress >= 50,
+        },
+        {
+            id: "progress",
+            label: "ثبت یک پیشرفت جدید",
+            completed: recentSkills.some(
+                (skill) => (Number(progress?.[skill.id]) || 0) > 0
+            ),
+        },
+    ];
+
+    const completedMissionCount = dailyMissions.filter(
+        (mission) => mission.completed
+    ).length;
 
     return (
         <>
             <Scene variant="result" />
 
-            <section className="relative z-10 max-w-6xl mx-auto px-6 py-16 text-white space-y-8">
+            <main
+                dir="rtl"
+                className="relative z-10 mx-auto max-w-7xl space-y-6 px-4 pb-32 pt-10 text-white sm:px-6 lg:px-8"
+            >
+                {/* Header */}
+                <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                        <p className="mb-2 text-sm font-medium text-cyan-400">
+                            مرکز کنترل یادگیری
+                        </p>
 
-                {/* ==================== هدر ==================== */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="space-y-1">
-                        <h1 className="text-4xl font-black bg-gradient-to-l from-white to-cyan-400 bg-clip-text text-transparent">
+                        <h1 className="text-3xl font-black tracking-tight sm:text-4xl">
                             به مسیرت خوش اومدی
                         </h1>
-                        {currentStage?.title && (
-                            <p className="text-zinc-500 text-base">
-                                مرحله فعلی: {currentStage.title}
-                            </p>
-                        )}
+
+                        <p className="mt-2 text-sm leading-6 text-zinc-500">
+                            {currentStage?.title
+                                ? `الان در مرحله «${currentStage.title}» هستی.`
+                                : "مرحله بعدی مسیرت آماده است."}
+                        </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-zinc-300 text-sm font-medium">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-zinc-400">
                             {new Date().toLocaleDateString("fa-IR")}
                         </span>
-                        <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-orange-400/10 border border-orange-400/20 text-orange-400 text-sm font-bold">
-                            <Flame className="w-4 h-4" />
-                            {streakDays} روز
+
+                        <span className="inline-flex items-center gap-2 rounded-full border border-orange-400/20 bg-orange-400/10 px-4 py-2 font-bold text-orange-400">
+                            <Flame className="h-4 w-4" />
+                            {streakDays} روز متوالی
                         </span>
                     </div>
-                </div>
+                </header>
 
-                {/* ==================== کارت ادامه‌ی یادگیری / تبریک پایان ==================== */}
-                {isAllCompleted ? (
-                    <div className="p-8 rounded-3xl bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-2xl bg-emerald-400/15 border border-emerald-400/30 flex items-center justify-center flex-shrink-0">
-                                    <PartyPopper className="w-7 h-7 text-emerald-400" />
-                                </div>
-                                <div>
-                                    <h2 className="text-2xl font-black text-emerald-400">
-                                        همه‌ی مهارت‌ها رو کامل کردی!
-                                    </h2>
-                                    <p className="text-zinc-400 text-sm mt-1">
-                                        به پایان مسیر رسیدی، حالا وقت ساختن پروژه‌های واقعیه.
-                                    </p>
-                                </div>
-                            </div>
-                            <Link
-                                to="/roadmap"
-                                className="px-6 py-3 rounded-2xl bg-emerald-400 text-black font-bold hover:bg-emerald-300 transition-all text-center whitespace-nowrap"
-                            >
-                                مشاهده نقشه راه
-                            </Link>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="p-8 rounded-3xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-                            <div className="space-y-3 flex-1">
-                                <p className="inline-flex items-center gap-1.5 text-zinc-400 text-sm font-medium">
-                                    {isInProgress ? (
-                                        <>
-                                            <TrendingUp className="w-4 h-4 text-cyan-400" />
-                                            در حال یادگیری
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Rocket className="w-4 h-4 text-cyan-400" />
-                                            شروع کن
-                                        </>
-                                    )}
-                                </p>
-
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-                                        <BookOpen className="w-6 h-6 text-cyan-400" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-2xl font-black">
-                                            {activeSkill?.title || "شروع مسیر"}
-                                        </h2>
-                                        <p className="text-zinc-400 text-sm mt-0.5">
-                                            {activeSkill?.description || "اولین مهارت رو انتخاب کن"}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {isInProgress && (
-                                    <div className="space-y-1.5 max-w-xs pt-1">
-                                        <div className="flex justify-between text-xs">
-                                            <span className="text-zinc-500">پیشرفت</span>
-                                            <span className="text-cyan-400 font-mono">
-                                                {Math.floor(skillProgress)}%
-                                            </span>
+                {/* Primary dashboard grid */}
+                <section className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.85fr)]">
+                    {/* Main action area */}
+                    <div className="space-y-6">
+                        {/* Continue learning */}
+                        {isAllCompleted ? (
+                            <article className="overflow-hidden rounded-[2rem] border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 via-zinc-950/70 to-cyan-500/10 p-7 sm:p-8">
+                                <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex items-start gap-4">
+                                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/25 bg-emerald-400/10">
+                                            <PartyPopper className="h-7 w-7 text-emerald-400" />
                                         </div>
-                                        <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-gradient-to-l from-cyan-400 to-blue-400 rounded-full transition-all duration-700"
-                                                style={{ width: `${skillProgress}%` }}
-                                            />
+
+                                        <div>
+                                            <p className="text-sm font-bold text-emerald-400">
+                                                مسیر تکمیل شد
+                                            </p>
+                                            <h2 className="mt-1 text-2xl font-black">
+                                                همه‌ی مهارت‌ها رو کامل کردی
+                                            </h2>
+                                            <p className="mt-2 max-w-xl text-sm leading-7 text-zinc-400">
+                                                حالا بهترین قدم، ساخت پروژه‌های واقعی و تثبیت
+                                                چیزهاییه که یاد گرفتی.
+                                            </p>
                                         </div>
                                     </div>
-                                )}
 
-                                {!isInProgress && activeSkill?.requires?.length > 0 && (
-                                    <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap pt-1">
-                                        <span>پیش‌نیازها:</span>
-                                        {activeSkill.requires.map((req) => {
-                                            const reqSkill = allSkills.find((s) => s.id === req);
-                                            const isCompleted = (progress?.[req] || 0) >= 100;
-                                            return (
-                                                <span
-                                                    key={req}
-                                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full ${
-                                                        isCompleted
-                                                            ? "bg-emerald-500/15 text-emerald-400"
-                                                            : "bg-white/5 text-zinc-400"
-                                                    }`}
-                                                >
-                                                    {isCompleted ? (
-                                                        <CheckCircle2 className="w-3 h-3" />
-                                                    ) : (
-                                                        <BookOpen className="w-3 h-3" />
+                                    <Link
+                                        to="/roadmap"
+                                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-6 py-3 font-bold text-black transition hover:bg-emerald-300"
+                                    >
+                                        مشاهده مسیر
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Link>
+                                </div>
+                            </article>
+                        ) : (
+                            <article className="relative overflow-hidden rounded-[2rem] border border-cyan-400/20 bg-gradient-to-br from-cyan-500/12 via-zinc-950/75 to-blue-500/10 p-7 sm:p-8">
+                                <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl" />
+                                <div className="pointer-events-none absolute -bottom-24 -right-16 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" />
+
+                                <div className="relative">
+                                    <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+                                        <div className="max-w-2xl">
+                                            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/15 bg-cyan-400/8 px-3 py-1.5 text-xs font-bold text-cyan-300">
+                                                <Play className="h-3.5 w-3.5" />
+                                                {isInProgress
+                                                    ? "ادامه‌ی یادگیری"
+                                                    : "پیشنهاد بعدی"}
+                                            </div>
+
+                                            <div className="mt-5 flex items-start gap-4">
+                                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-2xl">
+                                                    {activeSkill?.icon || (
+                                                        <BookOpen className="h-7 w-7 text-cyan-400" />
                                                     )}
-                                                    {reqSkill?.title || req}
-                                                </span>
-                                            );
-                                        })}
+                                                </div>
+
+                                                <div>
+                                                    <h2 className="text-2xl font-black sm:text-3xl">
+                                                        {activeSkill?.title || "شروع مسیر"}
+                                                    </h2>
+
+                                                    <p className="mt-2 max-w-xl text-sm leading-7 text-zinc-400">
+                                                        {activeSkill?.description ||
+                                                            "اولین مهارت مسیرت رو شروع کن."}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-6 max-w-xl">
+                                                <div className="mb-2 flex items-center justify-between text-xs">
+                                                    <span className="text-zinc-500">
+                                                        پیشرفت این مهارت
+                                                    </span>
+                                                    <span className="font-mono font-bold text-cyan-400">
+                                                        {Math.floor(activeSkillProgress)}%
+                                                    </span>
+                                                </div>
+
+                                                <ProgressBar value={activeSkillProgress} />
+                                            </div>
+
+                                            {!isInProgress &&
+                                                activeSkill?.requires?.length > 0 && (
+                                                    <div className="mt-5 flex flex-wrap items-center gap-2 text-xs">
+                                                        <span className="text-zinc-600">
+                                                            پیش‌نیازها:
+                                                        </span>
+
+                                                        {activeSkill.requires.map((requiredId) => {
+                                                            const requiredSkill = allSkills.find(
+                                                                (skill) =>
+                                                                    skill.id === requiredId
+                                                            );
+                                                            const completed =
+                                                                (Number(
+                                                                    progress?.[requiredId]
+                                                                ) || 0) >= 100;
+
+                                                            return (
+                                                                <span
+                                                                    key={requiredId}
+                                                                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 ${
+                                                                        completed
+                                                                            ? "bg-emerald-400/10 text-emerald-400"
+                                                                            : "bg-white/5 text-zinc-500"
+                                                                    }`}
+                                                                >
+                                                                    {completed ? (
+                                                                        <CheckCircle2 className="h-3 w-3" />
+                                                                    ) : (
+                                                                        <Lock className="h-3 w-3" />
+                                                                    )}
+                                                                    {requiredSkill?.title ||
+                                                                        requiredId}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                        </div>
+
+                                        <Link
+                                            to={`/skill/${
+                                                activeSkill?.id || allSkills[0]?.id
+                                            }`}
+                                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-cyan-400 px-7 py-3.5 font-black text-black shadow-lg shadow-cyan-400/10 transition hover:bg-cyan-300 active:scale-[0.98]"
+                                        >
+                                            {isInProgress
+                                                ? "ادامه یادگیری"
+                                                : "شروع یادگیری"}
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </Link>
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            </article>
+                        )}
 
-                            <Link
-                                to={`/skill/${activeSkill?.id || allSkills[0]?.id}`}
-                                className="px-6 py-3 rounded-2xl bg-cyan-400 text-black font-bold hover:bg-cyan-300 transition-all active:scale-[0.98] text-center whitespace-nowrap flex-shrink-0"
-                            >
-                                {isInProgress ? "ادامه یادگیری" : "شروع یادگیری"}
-                            </Link>
-                        </div>
-                    </div>
-                )}
+                        {/* Stats */}
+                        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                            <StatCard
+                                label="پیشرفت مسیر"
+                                value={`${roadmapProgress}%`}
+                                helper={`${completedSkills.length} مهارت کامل شده`}
+                                icon={Gauge}
+                                iconClassName="text-cyan-400"
+                            />
 
-                {/* ==================== آمار یکپارچه (یه‌بار، نه سه‌بار) ==================== */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800">
-                        <div className="flex items-center justify-between">
-                            <span className="text-zinc-500 text-xs">پیشرفت کل</span>
-                            <TrendingUp className="w-4 h-4 text-cyan-400" />
-                        </div>
-                        <p className="text-2xl font-black text-cyan-400 mt-2">
-                            {roadmapProgress}%
-                        </p>
-                        <div className="mt-2 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-cyan-400 rounded-full transition-all duration-700"
-                                style={{ width: `${roadmapProgress}%` }}
+                            <StatCard
+                                label="XP کسب‌شده"
+                                value={totalXP.toLocaleString()}
+                                helper="از مهارت‌های تکمیل‌شده"
+                                icon={Zap}
+                                iconClassName="text-yellow-400"
+                            />
+
+                            <StatCard
+                                label="در حال یادگیری"
+                                value={inProgressSkills.length}
+                                helper={`${lockedSkills.length} مهارت هنوز قفل است`}
+                                icon={BookOpen}
+                                iconClassName="text-emerald-400"
+                            />
+
+                            <StatCard
+                                label="دستاوردها"
+                                value={`${unlockedAchievements.length}/${achievements.length}`}
+                                helper="مدال‌های بازشده"
+                                icon={Trophy}
+                                iconClassName="text-purple-400"
                             />
                         </div>
-                    </div>
 
-                    <div className="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800">
-                        <div className="flex items-center justify-between">
-                            <span className="text-zinc-500 text-xs">مهارت‌ها</span>
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        </div>
-                        <p className="text-2xl font-black text-emerald-400 mt-2">
-                            {completedSkills.length}/{allSkills.length}
-                        </p>
-                        <p className="text-zinc-600 text-xs mt-1">
-                            {inProgressSkills.length} در حال یادگیری · {lockedSkills.length} قفل
-                        </p>
-                    </div>
+                        {/* Learning path preview */}
+                        <article className="rounded-[2rem] border border-white/5 bg-zinc-950/45 p-6 backdrop-blur-xl">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <p className="text-xs font-bold text-cyan-400">
+                                        نمای مسیر
+                                    </p>
+                                    <h2 className="mt-1 text-xl font-black">
+                                        جایگاه فعلی تو در نقشه راه
+                                    </h2>
+                                </div>
 
-                    <div className="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800">
-                        <div className="flex items-center justify-between">
-                            <span className="text-zinc-500 text-xs">XP کل</span>
-                            <Zap className="w-4 h-4 text-yellow-400" />
-                        </div>
-                        <p className="text-2xl font-black text-yellow-400 mt-2">
-                            {totalXP.toLocaleString()}
-                        </p>
-                    </div>
-
-                    <div className="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800">
-                        <div className="flex items-center justify-between">
-                            <span className="text-zinc-500 text-xs">دستاوردها</span>
-                            <Trophy className="w-4 h-4 text-purple-400" />
-                        </div>
-                        <p className="text-2xl font-black text-purple-400 mt-2">
-                            {unlockedAchievements.length}/{achievements.length}
-                        </p>
-                    </div>
-                </div>
-
-                {/* ==================== ستون‌ها: مهارت‌های اخیر + هدف روزانه/دستاوردها ==================== */}
-                <div className="grid md:grid-cols-3 gap-6">
-
-                    {/* مهارت‌های در حال یادگیری */}
-                    <div className="md:col-span-2 space-y-4">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-lg font-bold">مهارت‌های در حال یادگیری</h2>
-                            <Link
-                                to="/roadmap"
-                                className="inline-flex items-center gap-1 text-cyan-400 text-sm hover:underline"
-                            >
-                                مشاهده همه
-                                <ChevronLeft className="w-3.5 h-3.5" />
-                            </Link>
-                        </div>
-
-                        {recentSkills.length === 0 ? (
-                            <div className="p-8 rounded-3xl bg-zinc-900/50 border border-zinc-800 text-center">
-                                <Rocket className="w-8 h-8 text-zinc-600 mx-auto mb-3" />
-                                <p className="text-zinc-400 text-sm">
-                                    هنوز هیچ مهارتی رو شروع نکردی
-                                </p>
                                 <Link
                                     to="/roadmap"
-                                    className="inline-block mt-3 text-cyan-400 text-sm hover:underline"
+                                    className="inline-flex items-center gap-1 text-sm font-bold text-cyan-400 hover:text-cyan-300"
                                 >
-                                    برو به نقشه راه
+                                    مشاهده نقشه کامل
+                                    <ChevronLeft className="h-4 w-4" />
                                 </Link>
                             </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {recentSkills.map((skill) => {
-                                    const value = progress?.[skill.id] || 0;
-                                    return (
-                                        <Link
-                                            key={skill.id}
-                                            to={`/skill/${skill.id}`}
-                                            className="block p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-cyan-400/30 transition-all group"
-                                        >
-                                            <div className="flex items-center justify-between gap-4">
-                                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                    <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-                                                        <BookOpen className="w-5 h-5 text-cyan-400" />
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                            <h3 className="font-bold group-hover:text-cyan-300 transition-colors">
-                                                                {skill.title}
-                                                            </h3>
-                                                            <span className="text-xs text-zinc-600">
-                                                                {skill.time} روز
+
+                            <div className="mt-6 overflow-x-auto pb-2">
+                                <div className="flex min-w-max items-center gap-2">
+                                    {pathPreview.length > 0 ? (
+                                        pathPreview.map((skill, index) => {
+                                            const value =
+                                                Number(progress?.[skill.id]) || 0;
+                                            const completed = value >= 100;
+                                            const active = skill.id === activeSkill?.id;
+                                            const locked =
+                                                !completed && !active && value === 0;
+
+                                            return (
+                                                <div
+                                                    key={skill.id}
+                                                    className="flex items-center gap-2"
+                                                >
+                                                    <Link
+                                                        to={
+                                                            locked
+                                                                ? "/roadmap"
+                                                                : `/skill/${skill.id}`
+                                                        }
+                                                        className={`group flex w-36 flex-col rounded-2xl border p-4 transition ${
+                                                            completed
+                                                                ? "border-emerald-400/20 bg-emerald-400/[0.06]"
+                                                                : active
+                                                                ? "border-cyan-400/30 bg-cyan-400/[0.08]"
+                                                                : "border-white/5 bg-white/[0.02]"
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-xl">
+                                                                {skill.icon || "📘"}
                                                             </span>
+
+                                                            {completed ? (
+                                                                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                                                            ) : active ? (
+                                                                <Play className="h-4 w-4 text-cyan-400" />
+                                                            ) : (
+                                                                <Lock className="h-4 w-4 text-zinc-700" />
+                                                            )}
                                                         </div>
-                                                        <div className="flex items-center gap-3 mt-2">
-                                                            <div className="flex-1 max-w-xs h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                                                <div
-                                                                    className="h-full bg-gradient-to-l from-cyan-400 to-blue-400 rounded-full transition-all duration-700"
-                                                                    style={{ width: `${value}%` }}
-                                                                />
-                                                            </div>
-                                                            <span className="text-cyan-400 text-xs font-mono flex-shrink-0">
-                                                                {Math.floor(value)}%
-                                                            </span>
-                                                        </div>
-                                                    </div>
+
+                                                        <p
+                                                            className={`mt-3 truncate text-sm font-bold ${
+                                                                active
+                                                                    ? "text-white"
+                                                                    : "text-zinc-400"
+                                                            }`}
+                                                        >
+                                                            {skill.title}
+                                                        </p>
+
+                                                        <p className="mt-1 text-[11px] text-zinc-600">
+                                                            {completed
+                                                                ? "تکمیل شده"
+                                                                : active
+                                                                ? `${Math.floor(value)}٪ پیشرفت`
+                                                                : "مرحله بعد"}
+                                                        </p>
+                                                    </Link>
+
+                                                    {index < pathPreview.length - 1 && (
+                                                        <ChevronLeft className="h-4 w-4 text-zinc-800" />
+                                                    )}
                                                 </div>
-                                                <ChevronLeft className="w-4 h-4 text-zinc-600 group-hover:text-cyan-400 transition-colors flex-shrink-0" />
-                                            </div>
-                                        </Link>
-                                    );
-                                })}
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-sm text-zinc-600">
+                                            هنوز بخشی از مسیر شروع نشده.
+                                        </p>
+                                    )}
+                                </div>
                             </div>
-                        )}
+                        </article>
+
+                        {/* Active/recent skills */}
+                        <article className="rounded-[2rem] border border-white/5 bg-zinc-950/45 p-6 backdrop-blur-xl">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <p className="text-xs font-bold text-cyan-400">
+                                        فعالیت جاری
+                                    </p>
+                                    <h2 className="mt-1 text-xl font-black">
+                                        مهارت‌های فعال
+                                    </h2>
+                                </div>
+
+                                <Link
+                                    to="/skills"
+                                    className="inline-flex items-center gap-1 text-sm font-bold text-zinc-500 transition hover:text-white"
+                                >
+                                    همه مهارت‌ها
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Link>
+                            </div>
+
+                            <div className="mt-5 space-y-3">
+                                {recentSkills.length > 0 ? (
+                                    recentSkills.slice(0, 4).map((skill) => {
+                                        const value =
+                                            Number(progress?.[skill.id]) || 0;
+
+                                        return (
+                                            <Link
+                                                key={skill.id}
+                                                to={`/skill/${skill.id}`}
+                                                className="group flex items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-4 transition hover:border-cyan-400/20 hover:bg-cyan-400/[0.03]"
+                                            >
+                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-xl">
+                                                    {skill.icon || "📘"}
+                                                </div>
+
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="truncate text-sm font-bold text-white">
+                                                                {skill.title}
+                                                            </p>
+                                                            <p className="mt-0.5 text-xs text-zinc-600">
+                                                                {skill.time
+                                                                    ? `${skill.time} روز`
+                                                                    : "مهارت فعال"}
+                                                            </p>
+                                                        </div>
+
+                                                        <span className="shrink-0 font-mono text-xs font-bold text-cyan-400">
+                                                            {Math.floor(value)}%
+                                                        </span>
+                                                    </div>
+
+                                                    <ProgressBar
+                                                        value={value}
+                                                        className="mt-3 h-1.5"
+                                                    />
+                                                </div>
+
+                                                <ChevronLeft className="h-4 w-4 shrink-0 text-zinc-700 transition group-hover:text-cyan-400" />
+                                            </Link>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center">
+                                        <Rocket className="mx-auto h-8 w-8 text-zinc-700" />
+                                        <p className="mt-3 text-sm text-zinc-500">
+                                            هنوز هیچ مهارتی رو شروع نکردی.
+                                        </p>
+                                        <Link
+                                            to="/roadmap"
+                                            className="mt-3 inline-block text-sm font-bold text-cyan-400 hover:text-cyan-300"
+                                        >
+                                            شروع مسیر
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+                        </article>
                     </div>
 
-                    {/* هدف روزانه + دستاوردها */}
-                    <div className="space-y-6">
-
-                        {/* هدف روزانه */}
-                        <div className="p-6 rounded-3xl bg-gradient-to-br from-yellow-500/5 to-orange-500/5 border border-yellow-500/20">
-                            <div className="flex items-center justify-between">
+                    {/* Sidebar */}
+                    <aside className="space-y-6">
+                        {/* Daily mission */}
+                        <article className="rounded-[2rem] border border-yellow-400/15 bg-gradient-to-br from-yellow-500/[0.07] to-orange-500/[0.03] p-6">
+                            <div className="flex items-start justify-between gap-4">
                                 <div>
-                                    <p className="inline-flex items-center gap-1.5 text-zinc-500 text-sm">
-                                        <Target className="w-3.5 h-3.5" />
-                                        هدف روزانه
+                                    <p className="inline-flex items-center gap-2 text-xs font-bold text-yellow-400">
+                                        <Target className="h-4 w-4" />
+                                        مأموریت امروز
                                     </p>
-                                    <h3 className="text-xl font-black text-yellow-400 mt-1">
-                                        {dailyProgress} دقیقه
-                                    </h3>
-                                    <p className="text-zinc-600 text-xs">از ۶۰ دقیقه</p>
-                                </div>
-                                <div className="relative w-16 h-16 flex-shrink-0">
-                                    <svg className="w-16 h-16 -rotate-90">
-                                        <circle
-                                            cx="32"
-                                            cy="32"
-                                            r="27"
-                                            stroke="rgba(255,255,255,0.06)"
-                                            strokeWidth="6"
-                                            fill="none"
-                                        />
-                                        <circle
-                                            cx="32"
-                                            cy="32"
-                                            r="27"
-                                            stroke="#fbbf24"
-                                            strokeWidth="6"
-                                            fill="none"
-                                            strokeLinecap="round"
-                                            strokeDasharray={2 * Math.PI * 27}
-                                            strokeDashoffset={
-                                                2 * Math.PI * 27 -
-                                                (Math.min(100, (dailyProgress / 60) * 100) / 100) *
-                                                    (2 * Math.PI * 27)
-                                            }
-                                            className="transition-all duration-700"
-                                        />
-                                    </svg>
-                                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-yellow-400">
-                                        {Math.min(100, Math.floor((dailyProgress / 60) * 100))}%
-                                    </span>
-                                </div>
-                            </div>
-                            {dailyProgress < 60 && (
-                                <button
-                                    onClick={() => setDailyProgress((prev) => Math.min(60, prev + 15))}
-                                    className="w-full mt-4 py-2 rounded-xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-sm font-bold hover:bg-yellow-400/20 transition-colors"
-                                >
-                                    +۱۵ دقیقه
-                                </button>
-                            )}
-                        </div>
 
-                        {/* دستاوردها */}
-                        <div className="p-6 rounded-3xl bg-zinc-900/50 border border-zinc-800">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="inline-flex items-center gap-1.5 text-sm font-bold">
-                                    <Award className="w-4 h-4 text-purple-400" />
-                                    دستاوردها
-                                </h3>
-                                <span className="text-xs text-zinc-500">
-                                    {unlockedAchievements.length}/{achievements.length}
-                                </span>
+                                    <h2 className="mt-2 text-xl font-black">
+                                        {completedMissionCount} از{" "}
+                                        {dailyMissions.length} انجام شده
+                                    </h2>
+                                </div>
+
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-yellow-400/15 bg-yellow-400/10 text-sm font-black text-yellow-400">
+                                    {Math.floor(
+                                        (completedMissionCount /
+                                            dailyMissions.length) *
+                                            100
+                                    )}
+                                    %
+                                </div>
                             </div>
-                            <div className="grid grid-cols-3 gap-2">
-                                {achievements.map((ach) => (
+
+                            <div className="mt-6 space-y-3">
+                                {dailyMissions.map((mission) => (
                                     <div
-                                        key={ach.id}
-                                        title={ach.label}
-                                        className={`p-3 rounded-xl text-center transition-all ${
-                                            ach.unlocked
-                                                ? "bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border border-purple-500/20"
-                                                : "bg-zinc-800/30 border border-zinc-700 opacity-40"
-                                        }`}
+                                        key={mission.id}
+                                        className="flex items-center gap-3 rounded-xl border border-white/5 bg-black/10 px-3 py-3"
                                     >
-                                        <span className="text-xl block">{ach.icon}</span>
-                                        <p
-                                            className={`text-[11px] mt-1 truncate ${
-                                                ach.unlocked ? "text-white" : "text-zinc-500"
+                                        {mission.completed ? (
+                                            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
+                                        ) : (
+                                            <Circle className="h-5 w-5 shrink-0 text-zinc-700" />
+                                        )}
+
+                                        <span
+                                            className={`text-sm ${
+                                                mission.completed
+                                                    ? "text-zinc-400 line-through"
+                                                    : "text-zinc-300"
                                             }`}
                                         >
-                                            {ach.label}
-                                        </p>
+                                            {mission.label}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
-                            {nextAchievement && (
-                                <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/5">
-                                    <p className="text-xs text-zinc-500">دستاورد بعدی:</p>
-                                    <p className="text-sm font-bold mt-0.5">
-                                        {nextAchievement.icon} {nextAchievement.label}
+
+                            <div className="mt-5">
+                                <div className="mb-2 flex items-center justify-between text-xs">
+                                    <span className="text-zinc-600">
+                                        زمان مطالعه امروز
+                                    </span>
+                                    <span className="font-mono font-bold text-yellow-400">
+                                        {dailyProgress}/{DAILY_GOAL_MINUTES} دقیقه
+                                    </span>
+                                </div>
+
+                                <ProgressBar
+                                    value={dailyGoalProgress}
+                                    barClassName="bg-gradient-to-l from-yellow-400 to-orange-500"
+                                />
+                            </div>
+
+                            {dailyProgress < DAILY_GOAL_MINUTES &&
+                                typeof setDailyProgress === "function" && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setDailyProgress((previous) =>
+                                                Math.min(
+                                                    DAILY_GOAL_MINUTES,
+                                                    Number(previous || 0) + 15
+                                                )
+                                            )
+                                        }
+                                        className="mt-4 w-full rounded-xl border border-yellow-400/20 bg-yellow-400/10 py-2.5 text-sm font-bold text-yellow-400 transition hover:bg-yellow-400/15"
+                                    >
+                                        ثبت ۱۵ دقیقه مطالعه
+                                    </button>
+                                )}
+                        </article>
+
+                        {/* Achievement */}
+                        <article className="rounded-[2rem] border border-white/5 bg-zinc-950/45 p-6 backdrop-blur-xl">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-xs font-bold text-purple-400">
+                                        دستاوردها
                                     </p>
-                                    <p className="text-xs text-zinc-600 mt-0.5">
+                                    <h2 className="mt-1 text-lg font-black">
+                                        پیشرفت گیمیفیکیشن
+                                    </h2>
+                                </div>
+
+                                <Award className="h-5 w-5 text-purple-400" />
+                            </div>
+
+                            <div className="mt-5 grid grid-cols-3 gap-2">
+                                {achievements.slice(0, 6).map((achievement) => (
+                                    <div
+                                        key={achievement.id}
+                                        title={achievement.label}
+                                        className={`rounded-xl border p-3 text-center ${
+                                            achievement.unlocked
+                                                ? "border-purple-400/20 bg-purple-400/[0.06]"
+                                                : "border-white/5 bg-white/[0.02] opacity-35"
+                                        }`}
+                                    >
+                                        <span className="block text-xl">
+                                            {achievement.icon}
+                                        </span>
+                                        <span className="mt-1 block truncate text-[10px] text-zinc-400">
+                                            {achievement.label}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {nextAchievement && (
+                                <div className="mt-4 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                                    <p className="text-[11px] text-zinc-600">
+                                        دستاورد بعدی
+                                    </p>
+                                    <p className="mt-1 text-sm font-bold">
+                                        {nextAchievement.icon}{" "}
+                                        {nextAchievement.label}
+                                    </p>
+                                    <p className="mt-1 text-xs leading-5 text-zinc-600">
                                         {nextAchievement.description}
                                     </p>
                                 </div>
                             )}
-                        </div>
-                    </div>
-                </div>
+                        </article>
 
-                {/* ==================== دسترسی سریع (فقط لینک‌های واقعی) ==================== */}
-                <div className="grid grid-cols-2 gap-4">
-                    <Link
-                        to="/roadmap"
-                        className="p-6 rounded-3xl bg-zinc-900/50 border border-zinc-800 hover:border-cyan-400/40 transition-all duration-300 hover:scale-[1.02] group"
-                    >
-                        <div className="flex items-center gap-3">
-                            <Map className="w-6 h-6 text-cyan-400" />
-                            <h3 className="text-lg font-black">نقشه راه</h3>
-                        </div>
-                        <p className="text-zinc-500 text-sm mt-2 group-hover:text-zinc-400 transition-colors">
-                            مشاهده مسیر یادگیری کامل
-                        </p>
-                    </Link>
+                        {/* Quick access */}
+                        <article className="rounded-[2rem] border border-white/5 bg-zinc-950/45 p-6 backdrop-blur-xl">
+                            <p className="text-xs font-bold text-emerald-400">
+                                دسترسی سریع
+                            </p>
 
-                    <Link
-                        to="/skills"
-                        className="p-6 rounded-3xl bg-zinc-900/50 border border-zinc-800 hover:border-emerald-400/40 transition-all duration-300 hover:scale-[1.02] group"
-                    >
-                        <div className="flex items-center gap-3">
-                            <Sparkles className="w-6 h-6 text-emerald-400" />
-                            <h3 className="text-lg font-black">همه مهارت‌ها</h3>
-                        </div>
-                        <p className="text-zinc-500 text-sm mt-2 group-hover:text-zinc-400 transition-colors">
-                            مرور کامل مهارت‌های موجود
-                        </p>
-                    </Link>
-                </div>
-            </section>
+                            <div className="mt-4 space-y-2">
+                                <Link
+                                    to="/roadmap"
+                                    className="group flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3 transition hover:border-cyan-400/20"
+                                >
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/10">
+                                        <Map className="h-4 w-4 text-cyan-400" />
+                                    </span>
+                                    <span className="flex-1 text-sm font-bold">
+                                        نقشه راه
+                                    </span>
+                                    <ChevronLeft className="h-4 w-4 text-zinc-700 transition group-hover:text-cyan-400" />
+                                </Link>
+
+                                <Link
+                                    to="/skills"
+                                    className="group flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3 transition hover:border-emerald-400/20"
+                                >
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/10">
+                                        <Sparkles className="h-4 w-4 text-emerald-400" />
+                                    </span>
+                                    <span className="flex-1 text-sm font-bold">
+                                        کتابخانه مهارت‌ها
+                                    </span>
+                                    <ChevronLeft className="h-4 w-4 text-zinc-700 transition group-hover:text-emerald-400" />
+                                </Link>
+                            </div>
+                        </article>
+                    </aside>
+                </section>
+            </main>
         </>
     );
 }
