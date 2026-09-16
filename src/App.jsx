@@ -10,6 +10,7 @@ import Skills from "./pages/Skills";
 import Register from "./pages/Register";
 import Login from "./pages/login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import Profile from "./pages/Profile";
 
 export default function App() {
     return (
@@ -35,6 +36,8 @@ export default function App() {
                     <Route path="/skill/:id" element={<Skill />} />
 
                     <Route path="/skills" element={<Skills />} />
+
+                    <Route path="/profile" element={<Profile />} />
 
                 </Route>
             </Route>

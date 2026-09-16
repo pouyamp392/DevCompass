@@ -1,7 +1,9 @@
 import { useContext, useEffect, useState } from "react";
 import QuizContext from "../context/QuizContext";
+import AuthContext from "../context/AuthContext";
 
 export function useDashboardData() {
+    const { user } = useContext(AuthContext);
     const {
         roadmap,
         progress,
@@ -18,30 +20,18 @@ export function useDashboardData() {
     // --------------------------------
 
     const inProgressSkills = allSkills.filter((skill) => {
-        const value =
-            Number(progress?.[skill.id]) || 0;
-
+        const value = Number(progress?.[skill.id]) || 0;
         return value > 0 && value < 100;
     });
 
     const lockedSkills = allSkills.filter((skill) => {
-        const value =
-            Number(progress?.[skill.id]) || 0;
-
-        // Already started/completed
+        const value = Number(progress?.[skill.id]) || 0;
         if (value > 0) return false;
 
         const requires = skill.requires || [];
-
-        const hasUncompletedPrereq =
-            requires.some(
-                (requiredId) =>
-                    (Number(
-                        progress?.[requiredId]
-                    ) || 0) < 100
-            );
-
-        return hasUncompletedPrereq;
+        return requires.some(
+            (requiredId) => (Number(progress?.[requiredId]) || 0) < 100
+        );
     });
 
     // --------------------------------
@@ -49,21 +39,12 @@ export function useDashboardData() {
     // --------------------------------
 
     function isSkillAvailable(skill) {
-        const value =
-            Number(progress?.[skill.id]) || 0;
-
-        // Already completed
-        if (value >= 100) {
-            return false;
-        }
+        const value = Number(progress?.[skill.id]) || 0;
+        if (value >= 100) return false;
 
         const requires = skill.requires || [];
-
         return requires.every(
-            (requiredId) =>
-                (Number(
-                    progress?.[requiredId]
-                ) || 0) >= 100
+            (requiredId) => (Number(progress?.[requiredId]) || 0) >= 100
         );
     }
 
@@ -71,9 +52,7 @@ export function useDashboardData() {
     // Roadmap skill order
     // --------------------------------
 
-    const roadmapSkills = roadmap.flatMap(
-        (stage) => stage.skills || []
-    );
+    const roadmapSkills = roadmap.flatMap((stage) => stage.skills || []);
 
     // --------------------------------
     // Current skill
@@ -81,9 +60,7 @@ export function useDashboardData() {
 
     const currentSkill =
         roadmapSkills.find((skill) => {
-            const value =
-                Number(progress?.[skill.id]) || 0;
-
+            const value = Number(progress?.[skill.id]) || 0;
             return value > 0 && value < 100;
         }) || null;
 
@@ -93,26 +70,24 @@ export function useDashboardData() {
 
     const nextSkill =
         roadmapSkills.find((skill) => {
-            const value =
-                Number(progress?.[skill.id]) || 0;
-
-            // Already started/completed
-            if (value > 0) {
-                return false;
-            }
-
+            const value = Number(progress?.[skill.id]) || 0;
+            if (value > 0) return false;
             return isSkillAvailable(skill);
         }) || null;
 
     // --------------------------------
-    // XP
+    // XP (Read directly from AuthContext with local fallback)
     // --------------------------------
 
-    const totalXP = completedSkills.reduce(
-        (acc, skill) =>
-            acc + (Number(skill.xp) || 0),
+    const calculatedXP = completedSkills.reduce(
+        (acc, skill) => acc + (Number(skill.xp) || 0),
         0
     );
+
+    const totalXP =
+        user?.xp !== undefined && user?.xp !== null
+            ? Number(user.xp)
+            : calculatedXP;
 
     // --------------------------------
     // Current stage
@@ -120,10 +95,7 @@ export function useDashboardData() {
 
     const currentStage =
         roadmap.find((stage) =>
-            stage.skills?.some(
-                (skill) =>
-                    skill.id === currentSkill?.id
-            )
+            stage.skills?.some((skill) => skill.id === currentSkill?.id)
         ) || null;
 
     // --------------------------------
@@ -131,20 +103,11 @@ export function useDashboardData() {
     // --------------------------------
 
     const recentSkills = [...allSkills]
-        .filter(
-            (skill) =>
-                (Number(
-                    progress?.[skill.id]
-                ) || 0) > 0
-        )
+        .filter((skill) => (Number(progress?.[skill.id]) || 0) > 0)
         .sort(
             (a, b) =>
-                (Number(
-                    progress?.[b.id]
-                ) || 0) -
-                (Number(
-                    progress?.[a.id]
-                ) || 0)
+                (Number(progress?.[b.id]) || 0) -
+                (Number(progress?.[a.id]) || 0)
         )
         .slice(0, 3);
 
@@ -153,9 +116,7 @@ export function useDashboardData() {
     // --------------------------------
 
     const skillProgress = currentSkill
-        ? Number(
-              progress?.[currentSkill.id]
-          ) || 0
+        ? Number(progress?.[currentSkill.id]) || 0
         : 0;
 
     // --------------------------------
@@ -167,89 +128,66 @@ export function useDashboardData() {
             id: "first_skill",
             label: "اولین مهارت",
             icon: "🌟",
-            unlocked:
-                completedSkills.length >= 1,
-            description:
-                "یک مهارت رو کامل کردی",
+            unlocked: completedSkills.length >= 1,
+            description: "یک مهارت رو کامل کردی",
         },
         {
             id: "five_skills",
             label: "مهارت‌آموز",
             icon: "🏅",
-            unlocked:
-                completedSkills.length >= 5,
-            description:
-                "۵ مهارت رو کامل کردی",
+            unlocked: completedSkills.length >= 5,
+            description: "۵ مهارت رو کامل کردی",
         },
         {
             id: "ten_skills",
             label: "متخصص",
             icon: "🏆",
-            unlocked:
-                completedSkills.length >= 10,
-            description:
-                "۱۰ مهارت رو کامل کردی",
+            unlocked: completedSkills.length >= 10,
+            description: "۱۰ مهارت رو کامل کردی",
         },
         {
             id: "xp_500",
             label: "جمع‌آورنده XP",
             icon: "💎",
             unlocked: totalXP >= 500,
-            description:
-                "۵۰۰ XP جمع کردی",
+            description: "۵۰۰ XP جمع کردی",
         },
         {
             id: "xp_1000",
             label: "استاد XP",
             icon: "👑",
             unlocked: totalXP >= 1000,
-            description:
-                "۱۰۰۰ XP جمع کردی",
+            description: "۱۰۰۰ XP جمع کردی",
         },
         {
             id: "seven_day",
             label: "متدی",
             icon: "🔥",
             unlocked: streakDays >= 7,
-            description:
-                "۷ روز متوالی یادگیری",
+            description: "۷ روز متوالی یادگیری",
         },
     ];
 
-    const unlockedAchievements =
-        achievements.filter(
-            (achievement) =>
-                achievement.unlocked
-        );
+    const unlockedAchievements = achievements.filter(
+        (achievement) => achievement.unlocked
+    );
 
     const nextAchievement =
-        achievements.find(
-            (achievement) =>
-                !achievement.unlocked
-        ) || null;
+        achievements.find((achievement) => !achievement.unlocked) || null;
 
     // --------------------------------
     // Daily progress
     // --------------------------------
 
     useEffect(() => {
-        const saved =
-            localStorage.getItem(
-                "dailyProgress"
-            );
-
+        const saved = localStorage.getItem("dailyProgress");
         if (saved !== null) {
-            setDailyProgress(
-                Number(saved) || 0
-            );
+            setDailyProgress(Number(saved) || 0);
         }
     }, []);
 
     useEffect(() => {
-        localStorage.setItem(
-            "dailyProgress",
-            String(dailyProgress)
-        );
+        localStorage.setItem("dailyProgress", String(dailyProgress));
     }, [dailyProgress]);
 
     // --------------------------------
@@ -257,40 +195,25 @@ export function useDashboardData() {
     // --------------------------------
 
     return {
-        // Skills
         allSkills,
         completedSkills,
         inProgressSkills,
         lockedSkills,
-
-        // Current / next
         currentSkill,
         nextSkill,
         currentStage,
-
-        // Progress
         progress,
         roadmapProgress,
         skillProgress,
-
-        // XP
         totalXP,
-
-        // Recent
         recentSkills,
-
-        // Achievements
         achievements,
         unlockedAchievements,
         nextAchievement,
-
-        // Daily
         dailyProgress,
         setDailyProgress,
         streakDays,
         setStreakDays,
-
-        // Roadmap
         roadmap,
     };
 }
