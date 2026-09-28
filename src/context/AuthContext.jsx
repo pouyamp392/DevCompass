@@ -49,6 +49,9 @@ export function AuthProvider({ children }) {
   // ========================================
   // ADD XP (افزایش امتیاز کاربر)
   // ========================================
+  // TODO: در فاز ۴-۵ یکپارچه‌سازی می‌شود.
+  // این تابع فعلاً از context خارج شده تا کسی به‌اشتباه
+  // XP محلی را بدون همگام‌سازی با سرور تغییر ندهد.
   const addXp = useCallback((amount = 50) => {
     setUser((previousUser) => {
       if (!previousUser) return null;
@@ -61,11 +64,7 @@ export function AuthProvider({ children }) {
         xp: newXp,
       };
 
-      // ذخیره در localStorage برای پایدار ماندن تغییرات
       localStorage.setItem("devcompass_user", JSON.stringify(updatedUser));
-      
-      // در صورت نیاز می‌توانید درخواست fetch به API هم ارسال کنید
-      // fetch("http://localhost/devcompass-api/api/update-xp.php", { ... });
 
       return updatedUser;
     });
@@ -130,7 +129,7 @@ export function AuthProvider({ children }) {
   // ========================================
   // UPDATE PROFILE
   // ========================================
-  async function updateProfile(username, email, password = "") {
+  async function updateProfile(username, email) {
     if (!user?.id) {
       throw new Error("کاربر وارد نشده است");
     }
@@ -144,7 +143,6 @@ export function AuthProvider({ children }) {
           user_id: Number(user.id),
           username,
           email,
-          password,
         }),
       }
     );
@@ -179,7 +177,6 @@ export function AuthProvider({ children }) {
         logout,
         updateProfile,
         updateUser,
-        addXp, // خروجی دادن تابع افزایش XP
         isAuthenticated: !!user,
       }}
     >

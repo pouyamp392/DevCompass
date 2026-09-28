@@ -13,6 +13,23 @@ import generateStages from "../engine/generateStages";
 
 const QuizContext = createContext();
 
+// ========================================
+// NORMALIZE PROGRESS
+// ========================================
+function normalizeProgress(rawProgress) {
+  if (!rawProgress || typeof rawProgress !== "object") {
+    return {};
+  }
+
+  const normalized = {};
+
+  for (const [key, value] of Object.entries(rawProgress)) {
+    normalized[Number(key)] = value;
+  }
+
+  return normalized;
+}
+
 export function QuizProvider({ children }) {
   const { user, updateUser } = useContext(AuthContext);
 
@@ -22,7 +39,6 @@ export function QuizProvider({ children }) {
   const [result, setResult] = useState([]);
   const [roadmap, setRoadmap] = useState([]);
   const [progress, setProgress] = useState({});
-  const [roadmapGoal, setRoadmapGoal] = useState(null);
 
   // Skills State
   const [skills, setSkills] = useState([]);
@@ -53,7 +69,7 @@ export function QuizProvider({ children }) {
         }
 
         if (!cancelled) {
-          setProgress(data.data || {});
+          setProgress(normalizeProgress(data.data));
         }
       } catch (error) {
         if (!cancelled) {
@@ -116,61 +132,28 @@ export function QuizProvider({ children }) {
   }, []);
 
   // ========================================
-  // LOAD USER ROADMAP
+  // GENERATE USER ROADMAP
   // ========================================
+  // roadmap از روی user.roadmap_goal و skills محاسبه می‌شه.
+  // نیازی به fetch از سرور نیست — AuthContext منبع حقیقته.
   useEffect(() => {
-    if (!user?.id || skillsLoading || skills.length === 0) {
+    if (skillsLoading || skills.length === 0) {
       setRoadmap([]);
-      setRoadmapGoal(null);
       return;
     }
 
-    let cancelled = false;
+    const goal = user?.roadmap_goal;
 
-    async function loadRoadmap() {
-      try {
-        const response = await fetch(
-          `http://localhost/devcompass-api/api/roadmap.php?user_id=${user.id}`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          throw new Error(data.message || "خطا در دریافت مسیر یادگیری");
-        }
-
-        if (cancelled) return;
-
-        const goal = data.data?.roadmap_goal;
-
-        if (!goal) {
-          setRoadmap([]);
-          setRoadmapGoal(null);
-          return;
-        }
-
-        const roadmapSkills = generateRoadmap(goal, skills);
-        const generatedRoadmap = generateStages(roadmapSkills);
-
-        if (!cancelled) {
-          setRoadmapGoal(goal);
-          setRoadmap(generatedRoadmap);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error("Failed to load roadmap:", error);
-          setRoadmap([]);
-          setRoadmapGoal(null);
-        }
-      }
+    if (!goal) {
+      setRoadmap([]);
+      return;
     }
 
-    loadRoadmap();
+    const roadmapSkills = generateRoadmap(goal, skills);
+    const generatedRoadmap = generateStages(roadmapSkills);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [user, skills, skillsLoading]);
+    setRoadmap(generatedRoadmap);
+  }, [user?.roadmap_goal, skills, skillsLoading]);
 
   // ========================================
   // ROADMAP PROGRESS CALCULATIONS
@@ -180,7 +163,7 @@ export function QuizProvider({ children }) {
     const totalSkills = allRoadmapSkills.length;
 
     const completedSkills = allRoadmapSkills.filter(
-      (skill) => Number(progress?.[String(skill.id)] || 0) >= 100
+      (skill) => Number(progress?.[skill.id] || 0) >= 100
     );
 
     const completedSkillsCount = completedSkills.length;
@@ -272,8 +255,6 @@ export function QuizProvider({ children }) {
       skillsError,
       roadmap,
       setRoadmap,
-      roadmapGoal,
-      setRoadmapGoal,
       progress,
       setProgress,
       allSkills: progressData.allSkills,
@@ -289,7 +270,6 @@ export function QuizProvider({ children }) {
       skillsLoading,
       skillsError,
       roadmap,
-      roadmapGoal,
       progress,
       progressData,
       updateProgress,

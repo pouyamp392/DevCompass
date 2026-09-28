@@ -10,9 +10,6 @@ import {
 import QuizContext from "../context/QuizContext";
 import Scene from "../components/ui/Scene";
 
-import generateRoadmap from "../engine/generateRoadmap";
-import generateStages from "../engine/generateStages";
-
 import AuthContext from "../context/AuthContext";
 
 // ==============================================
@@ -39,10 +36,9 @@ function RankItem({
                 duration-300
                 cursor-pointer
 
-                ${
-                    isSelected
-                        ? "border-cyan-400/30 bg-cyan-500/[0.06]"
-                        : "border-white/5 bg-white/[0.02] hover:border-white/10"
+                ${isSelected
+                    ? "border-cyan-400/30 bg-cyan-500/[0.06]"
+                    : "border-white/5 bg-white/[0.02] hover:border-white/10"
                 }
             `}
         >
@@ -86,10 +82,9 @@ function RankItem({
                         transition-transform
                         duration-300
 
-                        ${
-                            isSelected
-                                ? "rotate-180"
-                                : ""
+                        ${isSelected
+                            ? "rotate-180"
+                            : ""
                         }
                     `}
                 />
@@ -104,10 +99,9 @@ function RankItem({
                     duration-400
                     ease-in-out
 
-                    ${
-                        isSelected
-                            ? "max-h-48 opacity-100 mt-4"
-                            : "max-h-0 opacity-0 mt-0"
+                    ${isSelected
+                        ? "max-h-48 opacity-100 mt-4"
+                        : "max-h-0 opacity-0 mt-0"
                     }
                 `}
             >
@@ -136,23 +130,12 @@ export default function Result() {
 
     const navigate = useNavigate();
 
-    const { user } =
+    const { user, updateUser } =
         useContext(AuthContext);
 
-    // ==========================================
-    // Quiz Context
-    // ==========================================
+    // ...
 
-    const {
-        result,
-        setRoadmap,
-        setRoadmapGoal,
-
-        // مهم:
-        // همان skills اصلی پروژه
-        skills,
-    } = useContext(QuizContext);
-
+    const { result, skills } = useContext(QuizContext);
     // ==========================================
     // STATE
     // ==========================================
@@ -214,149 +197,47 @@ export default function Result() {
     // ==========================================
 
     async function handleRoadmap(goal) {
-
         try {
-
-            // ====================================
             // 1. Validate user
-            // ====================================
-
             if (!user?.id) {
-                throw new Error(
-                    "کاربر وارد نشده است"
-                );
+                throw new Error("کاربر وارد نشده است");
             }
 
-            // ====================================
             // 2. Validate skills
-            // ====================================
-
-            if (
-                !Array.isArray(skills) ||
-                skills.length === 0
-            ) {
-                throw new Error(
-                    "لیست مهارت‌ها هنوز بارگذاری نشده است"
-                );
+            if (!Array.isArray(skills) || skills.length === 0) {
+                throw new Error("لیست مهارت‌ها هنوز بارگذاری نشده است");
             }
 
-            // ====================================
-            // 3. Generate roadmap
-            //
-            // از همان skills اصلی استفاده می‌کنیم
-            // ====================================
-
-            const roadmapSkills =
-                generateRoadmap(
-                    goal,
-                    skills
-                );
-
-            // ====================================
-            // 4. Generate stages
-            // ====================================
-
-            const roadmap =
-                generateStages(
-                    roadmapSkills
-                );
-
-            // ====================================
-            // Debug
-            // ====================================
-
-            console.log(
-                "Roadmap goal:",
-                goal
+            // 3. Save roadmap goal on server
+            const response = await fetch(
+                "http://localhost/devcompass-api/api/roadmap.php",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        user_id: Number(user.id),
+                        roadmap_goal: goal,
+                    }),
+                }
             );
 
-            console.log(
-                "All skills:",
-                skills
-            );
+            const data = await response.json();
 
-            console.log(
-                "Roadmap skills:",
-                roadmapSkills
-            );
-
-            console.log(
-                "Generated roadmap:",
-                roadmap
-            );
-
-            // ====================================
-            // 5. Save roadmap goal
-            // ====================================
-
-            const response =
-                await fetch(
-                    "http://localhost/devcompass-api/api/roadmap.php",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json",
-                        },
-
-                        body:
-                            JSON.stringify({
-                                user_id:
-                                    Number(
-                                        user.id
-                                    ),
-
-                                roadmap_goal:
-                                    goal,
-                            }),
-                    }
-                );
-
-            // ====================================
-            // 6. Response
-            // ====================================
-
-            const data =
-                await response.json();
-
-            if (
-                !response.ok ||
-                !data.success
-            ) {
-                throw new Error(
-                    data.message ||
-                        "خطا در ذخیره مسیر"
-                );
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "خطا در ذخیره مسیر");
             }
 
-            // ====================================
-            // 7. Update Context
-            // ====================================
+            // 4. Update user state
+            // QuizContext از این تغییر مطلع می‌شه و خودش roadmap رو می‌سازه
+            updateUser({ roadmap_goal: goal });
 
-            setRoadmap(
-                roadmap
-            );
-
-            setRoadmapGoal(
-                goal
-            );
-
-            // ====================================
-            // 8. Navigate
-            // ====================================
-
-            navigate(
-                "/dashboard"
-            );
+            // 5. Navigate
+            navigate("/dashboard");
 
         } catch (error) {
-
-            console.error(
-                "Failed to generate roadmap:",
-                error
-            );
-
+            console.error("Failed to generate roadmap:", error);
         }
     }
 

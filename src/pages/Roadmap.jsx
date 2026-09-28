@@ -1,5 +1,6 @@
 import { useContext, useState } from "react";
 
+import AuthContext from "../context/AuthContext";
 import QuizContext from "../context/QuizContext";
 
 import SkillCard from "../components/roadmap/SkillCard";
@@ -7,15 +8,16 @@ import SkillModal from "../components/roadmap/SkillModal";
 import Scene from "../components/ui/Scene";
 
 export default function Roadmap() {
+    const { user } = useContext(AuthContext);
     const {
         roadmap,
         progress,
-        roadmapGoal,
         totalSkills,
         completedSkillsCount,
         roadmapProgress,
     } = useContext(QuizContext);
 
+    const roadmapGoal = user?.roadmap_goal ?? null;
     const [selectedSkill, setSelectedSkill] = useState(null);
 
     const goalTitles = {

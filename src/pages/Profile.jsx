@@ -27,11 +27,13 @@ export default function Profile() {
     } = useContext(AuthContext);
 
     const {
-        roadmapGoal,
         roadmapProgress,
         completedSkillsCount,
         totalSkills,
     } = useContext(QuizContext);
+
+    // roadmapGoal از user گرفته می‌شه (منبع واحد حقیقت)
+    const roadmapGoal = user?.roadmap_goal ?? null;
 
     // ========================================
     // EDIT STATE
@@ -163,7 +165,7 @@ export default function Profile() {
         } catch (error) {
             setEditError(
                 error.message ||
-                    "ویرایش پروفایل ناموفق بود."
+                "ویرایش پروفایل ناموفق بود."
             );
         } finally {
             setSaving(false);
@@ -418,7 +420,7 @@ export default function Profile() {
                         label="Level"
                         value={userLevel}
                     />
-                    
+
                     <StatCard
                         icon={
                             <Target className="h-5 w-5" />
@@ -442,8 +444,7 @@ export default function Profile() {
                         }
                         label="XP"
                         value={userXP.toLocaleString()}
-                        />
-                        {console.log(userXP)}
+                    />
 
                 </section>
 
