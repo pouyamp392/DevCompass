@@ -15,11 +15,7 @@ export function AuthProvider({ children }) {
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
-        // حصول اطمینان از وجود مقدار متغیر xp
-        setUser({
-          ...parsedUser,
-          xp: parsedUser.xp ?? 0,
-        });
+        setUser(parsedUser);
       } catch {
         localStorage.removeItem("devcompass_user");
       }
@@ -28,9 +24,6 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  // ========================================
-  // UPDATE USER DATA
-  // ========================================
   const updateUser = useCallback((updatedData) => {
     setUser((previousUser) => {
       if (!previousUser && !updatedData) return null;
@@ -38,14 +31,12 @@ export function AuthProvider({ children }) {
       const newUserData = {
         ...previousUser,
         ...updatedData,
-        xp: updatedData?.xp ?? previousUser?.xp ?? 0, // حفظ مقدار XP
       };
 
       localStorage.setItem("devcompass_user", JSON.stringify(newUserData));
       return newUserData;
     });
   }, []);
-
   // ========================================
   // ADD XP (افزایش امتیاز کاربر)
   // ========================================
@@ -89,10 +80,8 @@ export function AuthProvider({ children }) {
       throw new Error(data.message || "ثبت‌نام ناموفق بود");
     }
 
-    const registeredUser = {
-      ...data.data.user,
-      xp: data.data.user.xp ?? 0,
-    };
+    const registeredUser = data.data.user;
+    
     updateUser(registeredUser);
 
     return registeredUser;
@@ -117,10 +106,7 @@ export function AuthProvider({ children }) {
       throw new Error(data.message || "ورود ناموفق بود");
     }
 
-    const loggedUser = {
-      ...data.data.user,
-      xp: data.data.user.xp ?? 0,
-    };
+    const loggedUser = data.data.user;
     updateUser(loggedUser);
 
     return loggedUser;

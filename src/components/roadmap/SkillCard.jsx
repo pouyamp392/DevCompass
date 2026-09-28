@@ -9,10 +9,18 @@ export default function SkillCard({ skill, status, progress, onClick }) {
             desc: "text-cyan-400/40",
             badge: "✓",
         },
-        current: {
+        "in-progress": {
             glass: "bg-white/[0.03] backdrop-blur-lg border-white/[0.08]",
             dot: "bg-white shadow-[0_0_18px_rgba(255,255,255,.4)]",
             ring: "border-white/25",
+            text: "text-white",
+            desc: "text-zinc-400",
+            badge: null,
+        },
+        available: {
+            glass: "bg-white/[0.03] backdrop-blur-lg border-white/[0.08]",
+            dot: "bg-white/70 shadow-[0_0_14px_rgba(255,255,255,.25)]",
+            ring: "border-white/20",
             text: "text-white",
             desc: "text-zinc-400",
             badge: null,
@@ -55,17 +63,17 @@ export default function SkillCard({ skill, status, progress, onClick }) {
                     w-11 h-11 rounded-full flex items-center justify-center
                     border-2 transition-all duration-500
                     ${config.ring}
-                    ${status === "current" && "group-hover:border-white/40"}
+                    ${(status === "in-progress" || status === "available") && "group-hover:border-white/40"}
                 `}>
                     {/* Inner dot */}
                     <div className={`
                         w-3 h-3 rounded-full transition-all duration-300
                         ${config.dot}
-                        ${status === "current" && "group-hover:scale-110"}
+                        ${(status === "in-progress" || status === "available") && "group-hover:scale-110"}
                     `} />
 
                     {/* Progress arc for current skill */}
-                    {status === "current" && progress > 0 && (
+                    {status === "in-progress" && progress > 0 && (
                         <svg className="absolute inset-0 w-full h-full -rotate-90">
                             <circle
                                 cx="22" cy="22" r="18"
@@ -107,7 +115,7 @@ export default function SkillCard({ skill, status, progress, onClick }) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                ) : status === "current" ? (
+                ) : (status === "in-progress" || status === "available") ? (
                     <div className="w-7 h-7 rounded-full bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-zinc-500 group-hover:text-cyan-400 group-hover:border-cyan-400/30 transition-all">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />

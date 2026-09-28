@@ -181,7 +181,7 @@ export default function Profile() {
         backend: "Backend Developer",
         ai: "AI Developer",
         devops: "DevOps Developer",
-        softSkills: "Soft Skills",
+        soft: "Soft Skills",
     };
 
     const goalTitle =

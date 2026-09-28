@@ -3,6 +3,8 @@ import { useContext, useState } from "react";
 import AuthContext from "../context/AuthContext";
 import QuizContext from "../context/QuizContext";
 
+import { getSkillStatus } from "../engine/skillStatus";
+
 import SkillCard from "../components/roadmap/SkillCard";
 import SkillModal from "../components/roadmap/SkillModal";
 import Scene from "../components/ui/Scene";
@@ -19,51 +21,15 @@ export default function Roadmap() {
 
     const roadmapGoal = user?.roadmap_goal ?? null;
     const [selectedSkill, setSelectedSkill] = useState(null);
+    const orderedSkills = roadmap.flatMap((stage) => stage.skills || []);
 
     const goalTitles = {
         frontend: "Frontend Developer",
         backend: "Backend Developer",
         ai: "AI Developer",
         devops: "DevOps Developer",
-        softSkills: "Soft Skills Developer",
+        soft: "Soft Skills Developer",
     };
-
-    // --------------------------------
-    // Skill status
-    // --------------------------------
-
-    function getSkillStatus(skill) {
-        const value =
-            Number(progress?.[skill.id]) || 0;
-
-        // Completed
-        if (value >= 100) {
-            return "completed";
-        }
-
-        // Currently learning
-        if (value > 0) {
-            return "current";
-        }
-
-        // Check prerequisites
-        const requires = skill.requires || [];
-
-        const hasUncompletedPrerequisite =
-            requires.some(
-                (requiredId) =>
-                    (Number(
-                        progress?.[requiredId]
-                    ) || 0) < 100
-            );
-
-        if (hasUncompletedPrerequisite) {
-            return "locked";
-        }
-
-        // Available to start
-        return "current";
-    }
 
     // --------------------------------
     // Empty roadmap
@@ -181,7 +147,7 @@ export default function Roadmap() {
                                     <SkillCard
                                         key={skill.id}
                                         skill={skill}
-                                        status={getSkillStatus(skill)}
+                                        status={getSkillStatus(skill, progress, orderedSkills)}
                                         progress={
                                             Number(
                                                 progress?.[

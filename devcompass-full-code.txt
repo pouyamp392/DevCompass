@@ -5218,10 +5218,18 @@ export default function SkillCard({ skill, status, progress, onClick }) {
             desc: "text-cyan-400/40",
             badge: "âœ“",
         },
-        current: {
+        "in-progress": {
             glass: "bg-white/[0.03] backdrop-blur-lg border-white/[0.08]",
             dot: "bg-white shadow-[0_0_18px_rgba(255,255,255,.4)]",
             ring: "border-white/25",
+            text: "text-white",
+            desc: "text-zinc-400",
+            badge: null,
+        },
+        available: {
+            glass: "bg-white/[0.03] backdrop-blur-lg border-white/[0.08]",
+            dot: "bg-white/70 shadow-[0_0_14px_rgba(255,255,255,.25)]",
+            ring: "border-white/20",
             text: "text-white",
             desc: "text-zinc-400",
             badge: null,
@@ -5264,17 +5272,17 @@ export default function SkillCard({ skill, status, progress, onClick }) {
                     w-11 h-11 rounded-full flex items-center justify-center
                     border-2 transition-all duration-500
                     ${config.ring}
-                    ${status === "current" && "group-hover:border-white/40"}
+                    ${(status === "in-progress" || status === "available") && "group-hover:border-white/40"}
                 `}>
                     {/* Inner dot */}
                     <div className={`
                         w-3 h-3 rounded-full transition-all duration-300
                         ${config.dot}
-                        ${status === "current" && "group-hover:scale-110"}
+                        ${(status === "in-progress" || status === "available") && "group-hover:scale-110"}
                     `} />
 
                     {/* Progress arc for current skill */}
-                    {status === "current" && progress > 0 && (
+                    {status === "in-progress" && progress > 0 && (
                         <svg className="absolute inset-0 w-full h-full -rotate-90">
                             <circle
                                 cx="22" cy="22" r="18"
@@ -5316,7 +5324,7 @@ export default function SkillCard({ skill, status, progress, onClick }) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                ) : status === "current" ? (
+                ) : (status === "in-progress" || status === "available") ? (
                     <div className="w-7 h-7 rounded-full bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-zinc-500 group-hover:text-cyan-400 group-hover:border-cyan-400/30 transition-all">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
@@ -8827,11 +8835,7 @@ export function AuthProvider({ children }) {
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
-        // Ø­ØµÙˆÙ„ Ø§Ø·Ù…ÛŒÙ†Ø§Ù† Ø§Ø² ÙˆØ¬ÙˆØ¯ Ù…Ù‚Ø¯Ø§Ø± Ù…ØªØºÛŒØ± xp
-        setUser({
-          ...parsedUser,
-          xp: parsedUser.xp ?? 0,
-        });
+        setUser(parsedUser);
       } catch {
         localStorage.removeItem("devcompass_user");
       }
@@ -8840,9 +8844,6 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  // ========================================
-  // UPDATE USER DATA
-  // ========================================
   const updateUser = useCallback((updatedData) => {
     setUser((previousUser) => {
       if (!previousUser && !updatedData) return null;
@@ -8850,17 +8851,18 @@ export function AuthProvider({ children }) {
       const newUserData = {
         ...previousUser,
         ...updatedData,
-        xp: updatedData?.xp ?? previousUser?.xp ?? 0, // Ø­ÙØ¸ Ù…Ù‚Ø¯Ø§Ø± XP
       };
 
       localStorage.setItem("devcompass_user", JSON.stringify(newUserData));
       return newUserData;
     });
   }, []);
-
   // ========================================
   // ADD XP (Ø§ÙØ²Ø§ÛŒØ´ Ø§Ù…ØªÛŒØ§Ø² Ú©Ø§Ø±Ø¨Ø±)
   // ========================================
+  // TODO: Ø¯Ø± ÙØ§Ø² Û´-Ûµ ÛŒÚ©Ù¾Ø§Ø±Ú†Ù‡â€ŒØ³Ø§Ø²ÛŒ Ù…ÛŒâ€ŒØ´ÙˆØ¯.
+  // Ø§ÛŒÙ† ØªØ§Ø¨Ø¹ ÙØ¹Ù„Ø§Ù‹ Ø§Ø² context Ø®Ø§Ø±Ø¬ Ø´Ø¯Ù‡ ØªØ§ Ú©Ø³ÛŒ Ø¨Ù‡â€ŒØ§Ø´ØªØ¨Ø§Ù‡
+  // XP Ù…Ø­Ù„ÛŒ Ø±Ø§ Ø¨Ø¯ÙˆÙ† Ù‡Ù…Ú¯Ø§Ù…â€ŒØ³Ø§Ø²ÛŒ Ø¨Ø§ Ø³Ø±ÙˆØ± ØªØºÛŒÛŒØ± Ù†Ø¯Ù‡Ø¯.
   const addXp = useCallback((amount = 50) => {
     setUser((previousUser) => {
       if (!previousUser) return null;
@@ -8873,11 +8875,7 @@ export function AuthProvider({ children }) {
         xp: newXp,
       };
 
-      // Ø°Ø®ÛŒØ±Ù‡ Ø¯Ø± localStorage Ø¨Ø±Ø§ÛŒ Ù¾Ø§ÛŒØ¯Ø§Ø± Ù…Ø§Ù†Ø¯Ù† ØªØºÛŒÛŒØ±Ø§Øª
       localStorage.setItem("devcompass_user", JSON.stringify(updatedUser));
-      
-      // Ø¯Ø± ØµÙˆØ±Øª Ù†ÛŒØ§Ø² Ù…ÛŒâ€ŒØªÙˆØ§Ù†ÛŒØ¯ Ø¯Ø±Ø®ÙˆØ§Ø³Øª fetch Ø¨Ù‡ API Ù‡Ù… Ø§Ø±Ø³Ø§Ù„ Ú©Ù†ÛŒØ¯
-      // fetch("http://localhost/devcompass-api/api/update-xp.php", { ... });
 
       return updatedUser;
     });
@@ -8902,10 +8900,8 @@ export function AuthProvider({ children }) {
       throw new Error(data.message || "Ø«Ø¨Øªâ€ŒÙ†Ø§Ù… Ù†Ø§Ù…ÙˆÙÙ‚ Ø¨ÙˆØ¯");
     }
 
-    const registeredUser = {
-      ...data.data.user,
-      xp: data.data.user.xp ?? 0,
-    };
+    const registeredUser = data.data.user;
+    
     updateUser(registeredUser);
 
     return registeredUser;
@@ -8930,10 +8926,7 @@ export function AuthProvider({ children }) {
       throw new Error(data.message || "ÙˆØ±ÙˆØ¯ Ù†Ø§Ù…ÙˆÙÙ‚ Ø¨ÙˆØ¯");
     }
 
-    const loggedUser = {
-      ...data.data.user,
-      xp: data.data.user.xp ?? 0,
-    };
+    const loggedUser = data.data.user;
     updateUser(loggedUser);
 
     return loggedUser;
@@ -8942,7 +8935,7 @@ export function AuthProvider({ children }) {
   // ========================================
   // UPDATE PROFILE
   // ========================================
-  async function updateProfile(username, email, password = "") {
+  async function updateProfile(username, email) {
     if (!user?.id) {
       throw new Error("Ú©Ø§Ø±Ø¨Ø± ÙˆØ§Ø±Ø¯ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª");
     }
@@ -8956,7 +8949,6 @@ export function AuthProvider({ children }) {
           user_id: Number(user.id),
           username,
           email,
-          password,
         }),
       }
     );
@@ -8991,7 +8983,6 @@ export function AuthProvider({ children }) {
         logout,
         updateProfile,
         updateUser,
-        addXp, // Ø®Ø±ÙˆØ¬ÛŒ Ø¯Ø§Ø¯Ù† ØªØ§Ø¨Ø¹ Ø§ÙØ²Ø§ÛŒØ´ XP
         isAuthenticated: !!user,
       }}
     >
@@ -9022,6 +9013,23 @@ import generateStages from "../engine/generateStages";
 
 const QuizContext = createContext();
 
+// ========================================
+// NORMALIZE PROGRESS
+// ========================================
+function normalizeProgress(rawProgress) {
+  if (!rawProgress || typeof rawProgress !== "object") {
+    return {};
+  }
+
+  const normalized = {};
+
+  for (const [key, value] of Object.entries(rawProgress)) {
+    normalized[Number(key)] = value;
+  }
+
+  return normalized;
+}
+
 export function QuizProvider({ children }) {
   const { user, updateUser } = useContext(AuthContext);
 
@@ -9031,7 +9039,6 @@ export function QuizProvider({ children }) {
   const [result, setResult] = useState([]);
   const [roadmap, setRoadmap] = useState([]);
   const [progress, setProgress] = useState({});
-  const [roadmapGoal, setRoadmapGoal] = useState(null);
 
   // Skills State
   const [skills, setSkills] = useState([]);
@@ -9062,7 +9069,7 @@ export function QuizProvider({ children }) {
         }
 
         if (!cancelled) {
-          setProgress(data.data || {});
+          setProgress(normalizeProgress(data.data));
         }
       } catch (error) {
         if (!cancelled) {
@@ -9125,61 +9132,28 @@ export function QuizProvider({ children }) {
   }, []);
 
   // ========================================
-  // LOAD USER ROADMAP
+  // GENERATE USER ROADMAP
   // ========================================
+  // roadmap Ø§Ø² Ø±ÙˆÛŒ user.roadmap_goal Ùˆ skills Ù…Ø­Ø§Ø³Ø¨Ù‡ Ù…ÛŒâ€ŒØ´Ù‡.
+  // Ù†ÛŒØ§Ø²ÛŒ Ø¨Ù‡ fetch Ø§Ø² Ø³Ø±ÙˆØ± Ù†ÛŒØ³Øª â€” AuthContext Ù…Ù†Ø¨Ø¹ Ø­Ù‚ÛŒÙ‚ØªÙ‡.
   useEffect(() => {
-    if (!user?.id || skillsLoading || skills.length === 0) {
+    if (skillsLoading || skills.length === 0) {
       setRoadmap([]);
-      setRoadmapGoal(null);
       return;
     }
 
-    let cancelled = false;
+    const goal = user?.roadmap_goal;
 
-    async function loadRoadmap() {
-      try {
-        const response = await fetch(
-          `http://localhost/devcompass-api/api/roadmap.php?user_id=${user.id}`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          throw new Error(data.message || "Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ù…Ø³ÛŒØ± ÛŒØ§Ø¯Ú¯ÛŒØ±ÛŒ");
-        }
-
-        if (cancelled) return;
-
-        const goal = data.data?.roadmap_goal;
-
-        if (!goal) {
-          setRoadmap([]);
-          setRoadmapGoal(null);
-          return;
-        }
-
-        const roadmapSkills = generateRoadmap(goal, skills);
-        const generatedRoadmap = generateStages(roadmapSkills);
-
-        if (!cancelled) {
-          setRoadmapGoal(goal);
-          setRoadmap(generatedRoadmap);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error("Failed to load roadmap:", error);
-          setRoadmap([]);
-          setRoadmapGoal(null);
-        }
-      }
+    if (!goal) {
+      setRoadmap([]);
+      return;
     }
 
-    loadRoadmap();
+    const roadmapSkills = generateRoadmap(goal, skills);
+    const generatedRoadmap = generateStages(roadmapSkills);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [user, skills, skillsLoading]);
+    setRoadmap(generatedRoadmap);
+  }, [user?.roadmap_goal, skills, skillsLoading]);
 
   // ========================================
   // ROADMAP PROGRESS CALCULATIONS
@@ -9189,7 +9163,7 @@ export function QuizProvider({ children }) {
     const totalSkills = allRoadmapSkills.length;
 
     const completedSkills = allRoadmapSkills.filter(
-      (skill) => Number(progress?.[String(skill.id)] || 0) >= 100
+      (skill) => Number(progress?.[skill.id] || 0) >= 100
     );
 
     const completedSkillsCount = completedSkills.length;
@@ -9281,8 +9255,6 @@ export function QuizProvider({ children }) {
       skillsError,
       roadmap,
       setRoadmap,
-      roadmapGoal,
-      setRoadmapGoal,
       progress,
       setProgress,
       allSkills: progressData.allSkills,
@@ -9298,7 +9270,6 @@ export function QuizProvider({ children }) {
       skillsLoading,
       skillsError,
       roadmap,
-      roadmapGoal,
       progress,
       progressData,
       updateProgress,
@@ -10352,6 +10323,82 @@ export default function generateStages(roadmap) {
 
 
 ============================================================
+FILE: C:\Users\rose\desktop\devcompass\src\engine\skillStatus.js
+============================================================
+
+// ========================================
+// SKILL STATUS
+// ========================================
+//
+// Ø§ÛŒÙ† ØªØ§Ø¨Ø¹ ØªÙ†Ù‡Ø§ Ù…Ù†Ø¨Ø¹ Ø­Ù‚ÛŒÙ‚Øª Ø¨Ø±Ø§ÛŒ ÙˆØ¶Ø¹ÛŒØª ÛŒÚ© Ù…Ù‡Ø§Ø±Øª Ø§Ø³Øª.
+// ØªÙ…Ø§Ù… Ú©Ø§Ù…Ù¾ÙˆÙ†Ù†Øªâ€ŒÙ‡Ø§ÛŒÛŒ Ú©Ù‡ Ø¨Ø§ Ù…Ù‡Ø§Ø±Øªâ€ŒÙ‡Ø§ Ú©Ø§Ø± Ù…ÛŒâ€ŒÚ©Ù†Ù†Ø¯ Ø¨Ø§ÛŒØ¯
+// Ø§Ø² Ø§ÛŒÙ† ØªØ§Ø¨Ø¹ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ú©Ù†Ù†Ø¯.
+//
+// Ù¾Ø§Ø±Ø§Ù…ØªØ±Ù‡Ø§:
+//   skill     â†’ Ø¢Ø¨Ø¬Ú©Øª Ù…Ù‡Ø§Ø±Øª (Ø´Ø§Ù…Ù„ id Ùˆ requires)
+//   progress  â†’ Ø¢Ø¨Ø¬Ú©Øª progress (Ú©Ù„ÛŒØ¯Ù‡Ø§ Ø¹Ø¯Ø¯ÛŒ)
+//
+// Ø®Ø±ÙˆØ¬ÛŒ: ÛŒÚ©ÛŒ Ø§Ø² Ø§ÛŒÙ† Ú†Ù‡Ø§Ø± string
+//   "completed"    â†’ progress >= 100
+//   "in-progress"  â†’ 0 < progress < 100
+//   "available"    â†’ progress = 0 Ùˆ Ù‡Ù…Ù‡â€ŒÛŒ prereqÙ‡Ø§ ØªÚ©Ù…ÛŒÙ„
+//   "locked"       â†’ progress = 0 Ùˆ Ø­Ø¯Ø§Ù‚Ù„ ÛŒÙ‡ prereq Ù†Ø§Ù‚Øµ
+
+export function getSkillStatus(skill, progress = {}) {
+    // ----------------------------------------
+    // 1. Validation
+    // ----------------------------------------
+
+    if (!skill) {
+        return "locked";
+    }
+
+    // ----------------------------------------
+    // 2. Progress
+    // ----------------------------------------
+
+    const skillId = Number(skill.id);
+
+    const value = Number(progress?.[skillId]) || 0;
+
+    // ----------------------------------------
+    // 3. Completed
+    // ----------------------------------------
+
+    if (value >= 100) {
+        return "completed";
+    }
+
+    // ----------------------------------------
+    // 4. In Progress
+    // ----------------------------------------
+
+    if (value > 0) {
+        return "in-progress";
+    }
+
+    // ----------------------------------------
+    // 5. Prerequisites
+    // ----------------------------------------
+
+    const requires = Array.isArray(skill.requires)
+        ? skill.requires
+        : [];
+
+    if (requires.length === 0) {
+        return "available";
+    }
+
+    const hasUncompletedRequired = requires.some((reqId) => {
+        const reqValue = Number(progress?.[Number(reqId)]) || 0;
+        return reqValue < 100;
+    });
+
+    return hasUncompletedRequired ? "locked" : "available";
+}
+
+
+============================================================
 FILE: C:\Users\rose\desktop\devcompass\src\engine\sortByPercentage.js
 ============================================================
 
@@ -10376,6 +10423,7 @@ FILE: C:\Users\rose\desktop\devcompass\src\hooks\useDashboardData.js
 import { useContext, useEffect, useState } from "react";
 import QuizContext from "../context/QuizContext";
 import AuthContext from "../context/AuthContext";
+import { getSkillStatus } from "../engine/skillStatus";
 
 export function useDashboardData() {
     const { user } = useContext(AuthContext);
@@ -10391,37 +10439,20 @@ export function useDashboardData() {
     const [streakDays, setStreakDays] = useState(7);
 
     // --------------------------------
-    // Skill states
+    // Skill states (from engine)
     // --------------------------------
 
-    const inProgressSkills = allSkills.filter((skill) => {
-        const value = Number(progress?.[skill.id]) || 0;
-        return value > 0 && value < 100;
-    });
+    const inProgressSkills = allSkills.filter(
+        (skill) => getSkillStatus(skill, progress) === "in-progress"
+    );
 
-    const lockedSkills = allSkills.filter((skill) => {
-        const value = Number(progress?.[skill.id]) || 0;
-        if (value > 0) return false;
+    const lockedSkills = allSkills.filter(
+        (skill) => getSkillStatus(skill, progress) === "locked"
+    );
 
-        const requires = skill.requires || [];
-        return requires.some(
-            (requiredId) => (Number(progress?.[requiredId]) || 0) < 100
-        );
-    });
-
-    // --------------------------------
-    // Skill availability
-    // --------------------------------
-
-    function isSkillAvailable(skill) {
-        const value = Number(progress?.[skill.id]) || 0;
-        if (value >= 100) return false;
-
-        const requires = skill.requires || [];
-        return requires.every(
-            (requiredId) => (Number(progress?.[requiredId]) || 0) >= 100
-        );
-    }
+    const availableSkills = allSkills.filter(
+        (skill) => getSkillStatus(skill, progress) === "available"
+    );
 
     // --------------------------------
     // Roadmap skill order
@@ -10434,35 +10465,24 @@ export function useDashboardData() {
     // --------------------------------
 
     const currentSkill =
-        roadmapSkills.find((skill) => {
-            const value = Number(progress?.[skill.id]) || 0;
-            return value > 0 && value < 100;
-        }) || null;
+        roadmapSkills.find(
+            (skill) => getSkillStatus(skill, progress) === "in-progress"
+        ) || null;
 
     // --------------------------------
     // Next skill
     // --------------------------------
 
     const nextSkill =
-        roadmapSkills.find((skill) => {
-            const value = Number(progress?.[skill.id]) || 0;
-            if (value > 0) return false;
-            return isSkillAvailable(skill);
-        }) || null;
+        roadmapSkills.find(
+            (skill) => getSkillStatus(skill, progress) === "available"
+        ) || null;
 
     // --------------------------------
-    // XP (Read directly from AuthContext with local fallback)
+    // XP (single source of truth: user.xp)
     // --------------------------------
 
-    const calculatedXP = completedSkills.reduce(
-        (acc, skill) => acc + (Number(skill.xp) || 0),
-        0
-    );
-
-    const totalXP =
-        user?.xp !== undefined && user?.xp !== null
-            ? Number(user.xp)
-            : calculatedXP;
+    const totalXP = Number(user?.xp) || 0;
 
     // --------------------------------
     // Current stage
@@ -10470,7 +10490,9 @@ export function useDashboardData() {
 
     const currentStage =
         roadmap.find((stage) =>
-            stage.skills?.some((skill) => skill.id === currentSkill?.id)
+            stage.skills?.some(
+                (skill) => String(skill.id) === String(currentSkill?.id)
+            )
         ) || null;
 
     // --------------------------------
@@ -10574,6 +10596,7 @@ export function useDashboardData() {
         completedSkills,
         inProgressSkills,
         lockedSkills,
+        availableSkills,
         currentSkill,
         nextSkill,
         currentStage,
@@ -10607,6 +10630,40 @@ FILE: C:\Users\rose\desktop\devcompass\src\hooks\useSkillData.js
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import QuizContext from "../context/QuizContext";
+import { getSkillStatus } from "../engine/skillStatus";
+
+// ========================================
+// STATUS LABELS
+// ========================================
+//
+// Ø§ÛŒÙ† mapØŒ Ø®Ø±ÙˆØ¬ÛŒ getSkillStatus Ø±Ùˆ Ø¨Ù‡ label Ùˆ className
+// Ø¨Ø±Ø§ÛŒ Ù†Ù…Ø§ÛŒØ´ ØªØ¨Ø¯ÛŒÙ„ Ù…ÛŒâ€ŒÚ©Ù†Ù‡.
+//
+// Ú†Ø±Ø§ Ø§ÛŒÙ†Ø¬Ø§ Ùˆ Ù†Ù‡ ØªÙˆÛŒ engineØŸ Ú†ÙˆÙ† label Ùˆ className
+// Ù…Ø±Ø¨ÙˆØ· Ø¨Ù‡ UI Ù‡Ø³ØªÙ†ØŒ Ù†Ù‡ business logic.
+
+const STATUS_LABELS = {
+    completed: {
+        label: "Ú©Ø§Ù…Ù„ Ø´Ø¯Ù‡ âœ…",
+        className:
+            "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+    },
+    "in-progress": {
+        label: "Ø¯Ø± Ø­Ø§Ù„ ÛŒØ§Ø¯Ú¯ÛŒØ±ÛŒ ðŸš€",
+        className:
+            "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
+    },
+    available: {
+        label: "Ø¢Ù…Ø§Ø¯Ù‡ Ø´Ø±ÙˆØ¹ âœ¨",
+        className:
+            "bg-green-500/10 border-green-500/20 text-green-400",
+    },
+    locked: {
+        label: "Ù‚ÙÙ„ Ø´Ø¯Ù‡ ðŸ”’",
+        className:
+            "bg-red-500/10 border-red-500/20 text-red-400",
+    },
+};
 
 export function useSkillData() {
     const { id } = useParams();
@@ -10659,7 +10716,9 @@ export function useSkillData() {
     // --------------------------------
 
     const requires = allSkills.filter((item) =>
-        skill?.requires?.includes(item.id)
+        (skill?.requires || [])
+            .map(Number)
+            .includes(Number(item.id))
     );
 
     // --------------------------------
@@ -10668,7 +10727,9 @@ export function useSkillData() {
 
     const hasCompletedPrerequisites = (targetSkill) => {
         const requiredSkills = allSkills.filter((item) =>
-            targetSkill?.requires?.includes(item.id)
+            (targetSkill?.requires || [])
+                .map(Number)
+                .includes(Number(item.id))
         );
 
         return requiredSkills.every(
@@ -10684,7 +10745,7 @@ export function useSkillData() {
     const currentStage =
         roadmap.find((stage) =>
             stage.skills?.some(
-                (item) => item.id === skill?.id
+                (item) => String(item.id) === String(skill?.id)
             )
         ) || null;
 
@@ -10706,7 +10767,7 @@ export function useSkillData() {
 
     const currentSkillIndex =
         currentStageSkills.findIndex(
-            (item) => item.id === skill?.id
+            (item) => String(item.id) === String(skill?.id)
         );
 
     const nextSkillsInStage =
@@ -10765,45 +10826,12 @@ export function useSkillData() {
         getNextSuggestedSkills();
 
     // --------------------------------
-    // Skill status
+    // Skill status (from engine)
     // --------------------------------
 
-    const getSkillStatus = () => {
-        if (skillProgress >= 100) {
-            return {
-                label: "Ú©Ø§Ù…Ù„ Ø´Ø¯Ù‡ âœ…",
-                className:
-                    "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-            };
-        }
+    const statusKey = getSkillStatus(skill, progress);
 
-        if (skillProgress > 0) {
-            return {
-                label: "Ø¯Ø± Ø­Ø§Ù„ ÛŒØ§Ø¯Ú¯ÛŒØ±ÛŒ ðŸš€",
-                className:
-                    "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
-            };
-        }
-
-        const prerequisitesCompleted =
-            hasCompletedPrerequisites(skill);
-
-        if (!prerequisitesCompleted) {
-            return {
-                label: "Ù‚ÙÙ„ Ø´Ø¯Ù‡ ðŸ”’",
-                className:
-                    "bg-red-500/10 border-red-500/20 text-red-400",
-            };
-        }
-
-        return {
-            label: "Ø¢Ù…Ø§Ø¯Ù‡ Ø´Ø±ÙˆØ¹ âœ¨",
-            className:
-                "bg-green-500/10 border-green-500/20 text-green-400",
-        };
-    };
-
-    const status = getSkillStatus();
+    const status = STATUS_LABELS[statusKey];
 
     // --------------------------------
     // Button
@@ -10823,7 +10851,7 @@ export function useSkillData() {
 
     const isButtonDisabled =
         skillProgress >= 100 ||
-        status.label === "Ù‚ÙÙ„ Ø´Ø¯Ù‡ ðŸ”’";
+        statusKey === "locked";
 
     // --------------------------------
     // Estimate end date
@@ -10926,7 +10954,7 @@ export function useSkillData() {
 
         // Status
         status,
-        getSkillStatus,
+        statusKey,
 
         // Button
         getButtonText,
@@ -10954,6 +10982,7 @@ import {
 
 import QuizContext from "../context/QuizContext";
 import { CATEGORIES } from "../constants/categories";
+import { getSkillStatus } from "../engine/skillStatus";
 
 export function useSkills() {
     const {
@@ -11009,65 +11038,15 @@ export function useSkills() {
     }, [allSkills]);
 
     // ========================================
-    // SKILL STATUS
+    // SKILL STATUS WRAPPER
     // ========================================
+    //
+    // Ø§ÛŒÙ† wrapper ÙÙ‚Ø· Ø¨Ø±Ø§ÛŒ Ø³Ø§Ø²Ú¯Ø§Ø±ÛŒ Ø¨Ø§ Ú©Ø§Ù…Ù¾ÙˆÙ†Ù†Øªâ€ŒÙ‡Ø§ÛŒ ÙØ¹Ù„ÛŒ
+    // Ø§Ø³Øª Ú©Ù‡ getSkillStatus(skill) Ø±Ø§ ØµØ¯Ø§ Ù…ÛŒâ€ŒØ²Ù†Ù†Ø¯.
+    // Ø®ÙˆØ¯ ØªØ§Ø¨Ø¹ Ø§ØµÙ„ÛŒ Ø¯Ø± engine/skillStatus.js Ø§Ø³Øª.
 
-    const getSkillStatus = useCallback(
-        (skill) => {
-            if (!skill) {
-                return "locked";
-            }
-
-            const skillId =
-                String(skill.id);
-
-            const value =
-                Number(
-                    progress?.[skillId]
-                ) || 0;
-
-            // Completed
-            if (value >= 100) {
-                return "completed";
-            }
-
-            // In progress
-            if (value > 0) {
-                return "in-progress";
-            }
-
-            // Prerequisites
-            const requires =
-                Array.isArray(
-                    skill.requires
-                )
-                    ? skill.requires
-                    : [];
-
-            // No prerequisites
-            if (requires.length === 0) {
-                return "available";
-            }
-
-            // Check prerequisites
-            const hasUncompletedRequired =
-                requires.some(
-                    (reqId) =>
-                        (
-                            Number(
-                                progress?.[
-                                    String(
-                                        reqId
-                                    )
-                                ]
-                            ) || 0
-                        ) < 100
-                );
-
-            return hasUncompletedRequired
-                ? "locked"
-                : "available";
-        },
+    const getSkillStatusForSkill = useCallback(
+        (skill) => getSkillStatus(skill, progress),
         [progress]
     );
 
@@ -11265,7 +11244,7 @@ export function useSkills() {
             return allSkills
                 .filter((skill) => {
                     const status =
-                        getSkillStatus(
+                        getSkillStatusForSkill(
                             skill
                         );
 
@@ -11279,7 +11258,7 @@ export function useSkills() {
                 .slice(0, 3);
         }, [
             allSkills,
-            getSkillStatus,
+            getSkillStatusForSkill,
         ]);
 
     // ========================================
@@ -11463,7 +11442,7 @@ export function useSkills() {
                                 (
                                     skill
                                 ) =>
-                                    getSkillStatus(
+                                    getSkillStatusForSkill(
                                         skill
                                     ) ===
                                     "completed"
@@ -11474,7 +11453,7 @@ export function useSkills() {
                                 (
                                     skill
                                 ) =>
-                                    getSkillStatus(
+                                    getSkillStatusForSkill(
                                         skill
                                     ) ===
                                     "in-progress"
@@ -11485,7 +11464,7 @@ export function useSkills() {
                                 (
                                     skill
                                 ) =>
-                                    getSkillStatus(
+                                    getSkillStatusForSkill(
                                         skill
                                     ) ===
                                     "locked"
@@ -11544,7 +11523,7 @@ export function useSkills() {
             progress,
             searchTerm,
             sortBy,
-            getSkillStatus,
+            getSkillStatusForSkill,
         ]);
 
     // ========================================
@@ -11556,7 +11535,7 @@ export function useSkills() {
             const completed =
                 allSkills.filter(
                     (skill) =>
-                        getSkillStatus(
+                        getSkillStatusForSkill(
                             skill
                         ) ===
                         "completed"
@@ -11565,7 +11544,7 @@ export function useSkills() {
             const inProgress =
                 allSkills.filter(
                     (skill) =>
-                        getSkillStatus(
+                        getSkillStatusForSkill(
                             skill
                         ) ===
                         "in-progress"
@@ -11578,7 +11557,7 @@ export function useSkills() {
                 allSkills
                     .filter(
                         (skill) =>
-                            getSkillStatus(
+                            getSkillStatusForSkill(
                                 skill
                             ) ===
                             "completed"
@@ -11637,7 +11616,7 @@ export function useSkills() {
             };
         }, [
             allSkills,
-            getSkillStatus,
+            getSkillStatusForSkill,
         ]);
 
     // ========================================
@@ -11705,7 +11684,10 @@ export function useSkills() {
         // Functions
         // --------------------------------
 
-        getSkillStatus,
+        // Ø§ÛŒÙ† wrapperØŒ Ø¨Ø±Ø§ÛŒ Ø³Ø§Ø²Ú¯Ø§Ø±ÛŒ Ø¨Ø§ Ú©Ø§Ù…Ù¾ÙˆÙ†Ù†Øªâ€ŒÙ‡Ø§ÛŒ ÙØ¹Ù„ÛŒ Ø§Ø³Øª.
+        // Ø®ÙˆØ¯ ØªØ§Ø¨Ø¹ Ø§ØµÙ„ÛŒ Ø¯Ø± engine/skillStatus.js Ø§Ø³Øª.
+        getSkillStatus: getSkillStatusForSkill,
+
         getPrerequisiteDetails,
         buildSkillPath,
         toggleCategory,
@@ -11719,7 +11701,6 @@ export function useSkills() {
         globalStats,
     };
 }
-
 
 
 ============================================================
@@ -12894,11 +12875,13 @@ export default function Profile() {
     } = useContext(AuthContext);
 
     const {
-        roadmapGoal,
         roadmapProgress,
         completedSkillsCount,
         totalSkills,
     } = useContext(QuizContext);
+
+    // roadmapGoal Ø§Ø² user Ú¯Ø±ÙØªÙ‡ Ù…ÛŒâ€ŒØ´Ù‡ (Ù…Ù†Ø¨Ø¹ ÙˆØ§Ø­Ø¯ Ø­Ù‚ÛŒÙ‚Øª)
+    const roadmapGoal = user?.roadmap_goal ?? null;
 
     // ========================================
     // EDIT STATE
@@ -13030,7 +13013,7 @@ export default function Profile() {
         } catch (error) {
             setEditError(
                 error.message ||
-                    "ÙˆÛŒØ±Ø§ÛŒØ´ Ù¾Ø±ÙˆÙØ§ÛŒÙ„ Ù†Ø§Ù…ÙˆÙÙ‚ Ø¨ÙˆØ¯."
+                "ÙˆÛŒØ±Ø§ÛŒØ´ Ù¾Ø±ÙˆÙØ§ÛŒÙ„ Ù†Ø§Ù…ÙˆÙÙ‚ Ø¨ÙˆØ¯."
             );
         } finally {
             setSaving(false);
@@ -13285,7 +13268,7 @@ export default function Profile() {
                         label="Level"
                         value={userLevel}
                     />
-                    
+
                     <StatCard
                         icon={
                             <Target className="h-5 w-5" />
@@ -13309,8 +13292,7 @@ export default function Profile() {
                         }
                         label="XP"
                         value={userXP.toLocaleString()}
-                        />
-                        {console.log(userXP)}
+                    />
 
                 </section>
 
@@ -13981,9 +13963,6 @@ import {
 import QuizContext from "../context/QuizContext";
 import Scene from "../components/ui/Scene";
 
-import generateRoadmap from "../engine/generateRoadmap";
-import generateStages from "../engine/generateStages";
-
 import AuthContext from "../context/AuthContext";
 
 // ==============================================
@@ -14010,10 +13989,9 @@ function RankItem({
                 duration-300
                 cursor-pointer
 
-                ${
-                    isSelected
-                        ? "border-cyan-400/30 bg-cyan-500/[0.06]"
-                        : "border-white/5 bg-white/[0.02] hover:border-white/10"
+                ${isSelected
+                    ? "border-cyan-400/30 bg-cyan-500/[0.06]"
+                    : "border-white/5 bg-white/[0.02] hover:border-white/10"
                 }
             `}
         >
@@ -14057,10 +14035,9 @@ function RankItem({
                         transition-transform
                         duration-300
 
-                        ${
-                            isSelected
-                                ? "rotate-180"
-                                : ""
+                        ${isSelected
+                            ? "rotate-180"
+                            : ""
                         }
                     `}
                 />
@@ -14075,10 +14052,9 @@ function RankItem({
                     duration-400
                     ease-in-out
 
-                    ${
-                        isSelected
-                            ? "max-h-48 opacity-100 mt-4"
-                            : "max-h-0 opacity-0 mt-0"
+                    ${isSelected
+                        ? "max-h-48 opacity-100 mt-4"
+                        : "max-h-0 opacity-0 mt-0"
                     }
                 `}
             >
@@ -14107,23 +14083,12 @@ export default function Result() {
 
     const navigate = useNavigate();
 
-    const { user } =
+    const { user, updateUser } =
         useContext(AuthContext);
 
-    // ==========================================
-    // Quiz Context
-    // ==========================================
+    // ...
 
-    const {
-        result,
-        setRoadmap,
-        setRoadmapGoal,
-
-        // Ù…Ù‡Ù…:
-        // Ù‡Ù…Ø§Ù† skills Ø§ØµÙ„ÛŒ Ù¾Ø±ÙˆÚ˜Ù‡
-        skills,
-    } = useContext(QuizContext);
-
+    const { result, skills } = useContext(QuizContext);
     // ==========================================
     // STATE
     // ==========================================
@@ -14185,149 +14150,47 @@ export default function Result() {
     // ==========================================
 
     async function handleRoadmap(goal) {
-
         try {
-
-            // ====================================
             // 1. Validate user
-            // ====================================
-
             if (!user?.id) {
-                throw new Error(
-                    "Ú©Ø§Ø±Ø¨Ø± ÙˆØ§Ø±Ø¯ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª"
-                );
+                throw new Error("Ú©Ø§Ø±Ø¨Ø± ÙˆØ§Ø±Ø¯ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª");
             }
 
-            // ====================================
             // 2. Validate skills
-            // ====================================
-
-            if (
-                !Array.isArray(skills) ||
-                skills.length === 0
-            ) {
-                throw new Error(
-                    "Ù„ÛŒØ³Øª Ù…Ù‡Ø§Ø±Øªâ€ŒÙ‡Ø§ Ù‡Ù†ÙˆØ² Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª"
-                );
+            if (!Array.isArray(skills) || skills.length === 0) {
+                throw new Error("Ù„ÛŒØ³Øª Ù…Ù‡Ø§Ø±Øªâ€ŒÙ‡Ø§ Ù‡Ù†ÙˆØ² Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª");
             }
 
-            // ====================================
-            // 3. Generate roadmap
-            //
-            // Ø§Ø² Ù‡Ù…Ø§Ù† skills Ø§ØµÙ„ÛŒ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ù…ÛŒâ€ŒÚ©Ù†ÛŒÙ…
-            // ====================================
-
-            const roadmapSkills =
-                generateRoadmap(
-                    goal,
-                    skills
-                );
-
-            // ====================================
-            // 4. Generate stages
-            // ====================================
-
-            const roadmap =
-                generateStages(
-                    roadmapSkills
-                );
-
-            // ====================================
-            // Debug
-            // ====================================
-
-            console.log(
-                "Roadmap goal:",
-                goal
+            // 3. Save roadmap goal on server
+            const response = await fetch(
+                "http://localhost/devcompass-api/api/roadmap.php",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        user_id: Number(user.id),
+                        roadmap_goal: goal,
+                    }),
+                }
             );
 
-            console.log(
-                "All skills:",
-                skills
-            );
+            const data = await response.json();
 
-            console.log(
-                "Roadmap skills:",
-                roadmapSkills
-            );
-
-            console.log(
-                "Generated roadmap:",
-                roadmap
-            );
-
-            // ====================================
-            // 5. Save roadmap goal
-            // ====================================
-
-            const response =
-                await fetch(
-                    "http://localhost/devcompass-api/api/roadmap.php",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json",
-                        },
-
-                        body:
-                            JSON.stringify({
-                                user_id:
-                                    Number(
-                                        user.id
-                                    ),
-
-                                roadmap_goal:
-                                    goal,
-                            }),
-                    }
-                );
-
-            // ====================================
-            // 6. Response
-            // ====================================
-
-            const data =
-                await response.json();
-
-            if (
-                !response.ok ||
-                !data.success
-            ) {
-                throw new Error(
-                    data.message ||
-                        "Ø®Ø·Ø§ Ø¯Ø± Ø°Ø®ÛŒØ±Ù‡ Ù…Ø³ÛŒØ±"
-                );
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Ø®Ø·Ø§ Ø¯Ø± Ø°Ø®ÛŒØ±Ù‡ Ù…Ø³ÛŒØ±");
             }
 
-            // ====================================
-            // 7. Update Context
-            // ====================================
+            // 4. Update user state
+            // QuizContext Ø§Ø² Ø§ÛŒÙ† ØªØºÛŒÛŒØ± Ù…Ø·Ù„Ø¹ Ù…ÛŒâ€ŒØ´Ù‡ Ùˆ Ø®ÙˆØ¯Ø´ roadmap Ø±Ùˆ Ù…ÛŒâ€ŒØ³Ø§Ø²Ù‡
+            updateUser({ roadmap_goal: goal });
 
-            setRoadmap(
-                roadmap
-            );
-
-            setRoadmapGoal(
-                goal
-            );
-
-            // ====================================
-            // 8. Navigate
-            // ====================================
-
-            navigate(
-                "/dashboard"
-            );
+            // 5. Navigate
+            navigate("/dashboard");
 
         } catch (error) {
-
-            console.error(
-                "Failed to generate roadmap:",
-                error
-            );
-
+            console.error("Failed to generate roadmap:", error);
         }
     }
 
@@ -14604,22 +14467,26 @@ FILE: C:\Users\rose\desktop\devcompass\src\pages\Roadmap.jsx
 
 import { useContext, useState } from "react";
 
+import AuthContext from "../context/AuthContext";
 import QuizContext from "../context/QuizContext";
+
+import { getSkillStatus } from "../engine/skillStatus";
 
 import SkillCard from "../components/roadmap/SkillCard";
 import SkillModal from "../components/roadmap/SkillModal";
 import Scene from "../components/ui/Scene";
 
 export default function Roadmap() {
+    const { user } = useContext(AuthContext);
     const {
         roadmap,
         progress,
-        roadmapGoal,
         totalSkills,
         completedSkillsCount,
         roadmapProgress,
     } = useContext(QuizContext);
 
+    const roadmapGoal = user?.roadmap_goal ?? null;
     const [selectedSkill, setSelectedSkill] = useState(null);
 
     const goalTitles = {
@@ -14627,45 +14494,8 @@ export default function Roadmap() {
         backend: "Backend Developer",
         ai: "AI Developer",
         devops: "DevOps Developer",
-        softSkills: "Soft Skills Developer",
+        soft: "Soft Skills Developer",
     };
-
-    // --------------------------------
-    // Skill status
-    // --------------------------------
-
-    function getSkillStatus(skill) {
-        const value =
-            Number(progress?.[skill.id]) || 0;
-
-        // Completed
-        if (value >= 100) {
-            return "completed";
-        }
-
-        // Currently learning
-        if (value > 0) {
-            return "current";
-        }
-
-        // Check prerequisites
-        const requires = skill.requires || [];
-
-        const hasUncompletedPrerequisite =
-            requires.some(
-                (requiredId) =>
-                    (Number(
-                        progress?.[requiredId]
-                    ) || 0) < 100
-            );
-
-        if (hasUncompletedPrerequisite) {
-            return "locked";
-        }
-
-        // Available to start
-        return "current";
-    }
 
     // --------------------------------
     // Empty roadmap
@@ -14783,7 +14613,7 @@ export default function Roadmap() {
                                     <SkillCard
                                         key={skill.id}
                                         skill={skill}
-                                        status={getSkillStatus(skill)}
+                                        status={getSkillStatus(skill, progress)}
                                         progress={
                                             Number(
                                                 progress?.[
@@ -14814,7 +14644,6 @@ export default function Roadmap() {
         </>
     );
 }
-
 
 
 ============================================================

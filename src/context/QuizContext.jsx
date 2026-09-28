@@ -84,7 +84,7 @@ export function QuizProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user?.id]);
 
   // ========================================
   // LOAD ALL SKILLS

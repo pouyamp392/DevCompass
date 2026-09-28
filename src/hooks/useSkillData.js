@@ -1,6 +1,43 @@
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import QuizContext from "../context/QuizContext";
+import { getSkillStatus } from "../engine/skillStatus";
+
+
+// ========================================
+// STATUS LABELS
+// ========================================
+//
+// این map، خروجی getSkillStatus رو به label و className
+// برای نمایش تبدیل می‌کنه.
+//
+// چرا اینجا و نه توی engine؟ چون label و className
+// مربوط به UI هستن، نه business logic.
+
+const orderedSkills = roadmap.flatMap((stage) => stage.skills || []);
+
+const STATUS_LABELS = {
+    completed: {
+        label: "کامل شده ✅",
+        className:
+            "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+    },
+    "in-progress": {
+        label: "در حال یادگیری 🚀",
+        className:
+            "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
+    },
+    available: {
+        label: "آماده شروع ✨",
+        className:
+            "bg-green-500/10 border-green-500/20 text-green-400",
+    },
+    locked: {
+        label: "قفل شده 🔒",
+        className:
+            "bg-red-500/10 border-red-500/20 text-red-400",
+    },
+};
 
 export function useSkillData() {
     const { id } = useParams();
@@ -53,7 +90,9 @@ export function useSkillData() {
     // --------------------------------
 
     const requires = allSkills.filter((item) =>
-        skill?.requires?.includes(item.id)
+        (skill?.requires || [])
+            .map(Number)
+            .includes(Number(item.id))
     );
 
     // --------------------------------
@@ -62,7 +101,9 @@ export function useSkillData() {
 
     const hasCompletedPrerequisites = (targetSkill) => {
         const requiredSkills = allSkills.filter((item) =>
-            targetSkill?.requires?.includes(item.id)
+            (targetSkill?.requires || [])
+                .map(Number)
+                .includes(Number(item.id))
         );
 
         return requiredSkills.every(
@@ -78,7 +119,7 @@ export function useSkillData() {
     const currentStage =
         roadmap.find((stage) =>
             stage.skills?.some(
-                (item) => item.id === skill?.id
+                (item) => String(item.id) === String(skill?.id)
             )
         ) || null;
 
@@ -100,14 +141,14 @@ export function useSkillData() {
 
     const currentSkillIndex =
         currentStageSkills.findIndex(
-            (item) => item.id === skill?.id
+            (item) => String(item.id) === String(skill?.id)
         );
 
     const nextSkillsInStage =
         currentSkillIndex >= 0
             ? currentStageSkills.slice(
-                  currentSkillIndex + 1
-              )
+                currentSkillIndex + 1
+            )
             : [];
 
     // --------------------------------
@@ -159,45 +200,12 @@ export function useSkillData() {
         getNextSuggestedSkills();
 
     // --------------------------------
-    // Skill status
+    // Skill status (from engine)
     // --------------------------------
 
-    const getSkillStatus = () => {
-        if (skillProgress >= 100) {
-            return {
-                label: "کامل شده ✅",
-                className:
-                    "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-            };
-        }
+    const statusKey = getSkillStatus(skill, progress, orderedSkills);
 
-        if (skillProgress > 0) {
-            return {
-                label: "در حال یادگیری 🚀",
-                className:
-                    "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
-            };
-        }
-
-        const prerequisitesCompleted =
-            hasCompletedPrerequisites(skill);
-
-        if (!prerequisitesCompleted) {
-            return {
-                label: "قفل شده 🔒",
-                className:
-                    "bg-red-500/10 border-red-500/20 text-red-400",
-            };
-        }
-
-        return {
-            label: "آماده شروع ✨",
-            className:
-                "bg-green-500/10 border-green-500/20 text-green-400",
-        };
-    };
-
-    const status = getSkillStatus();
+    const status = STATUS_LABELS[statusKey];
 
     // --------------------------------
     // Button
@@ -217,7 +225,7 @@ export function useSkillData() {
 
     const isButtonDisabled =
         skillProgress >= 100 ||
-        status.label === "قفل شده 🔒";
+        statusKey === "locked";
 
     // --------------------------------
     // Estimate end date
@@ -235,8 +243,8 @@ export function useSkillData() {
         const remainingDays = Math.max(
             0,
             skillTime -
-                skillTime *
-                    (skillProgress / 100)
+            skillTime *
+            (skillProgress / 100)
         );
 
         const dailyHours = 2;
@@ -320,7 +328,7 @@ export function useSkillData() {
 
         // Status
         status,
-        getSkillStatus,
+        statusKey,
 
         // Button
         getButtonText,

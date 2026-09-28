@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import QuizContext from "../context/QuizContext";
 import AuthContext from "../context/AuthContext";
+import { getSkillStatus } from "../engine/skillStatus";
 
 export function useDashboardData() {
     const { user } = useContext(AuthContext);
@@ -16,37 +17,20 @@ export function useDashboardData() {
     const [streakDays, setStreakDays] = useState(7);
 
     // --------------------------------
-    // Skill states
+    // Skill states (from engine)
     // --------------------------------
 
-    const inProgressSkills = allSkills.filter((skill) => {
-        const value = Number(progress?.[skill.id]) || 0;
-        return value > 0 && value < 100;
-    });
+    const inProgressSkills = allSkills.filter(
+        (skill) => getSkillStatus(skill, progress) === "in-progress"
+    );
 
-    const lockedSkills = allSkills.filter((skill) => {
-        const value = Number(progress?.[skill.id]) || 0;
-        if (value > 0) return false;
+    const lockedSkills = allSkills.filter(
+        (skill) => getSkillStatus(skill, progress) === "locked"
+    );
 
-        const requires = skill.requires || [];
-        return requires.some(
-            (requiredId) => (Number(progress?.[requiredId]) || 0) < 100
-        );
-    });
-
-    // --------------------------------
-    // Skill availability
-    // --------------------------------
-
-    function isSkillAvailable(skill) {
-        const value = Number(progress?.[skill.id]) || 0;
-        if (value >= 100) return false;
-
-        const requires = skill.requires || [];
-        return requires.every(
-            (requiredId) => (Number(progress?.[requiredId]) || 0) >= 100
-        );
-    }
+    const availableSkills = allSkills.filter(
+        (skill) => getSkillStatus(skill, progress) === "available"
+    );
 
     // --------------------------------
     // Roadmap skill order
@@ -59,35 +43,24 @@ export function useDashboardData() {
     // --------------------------------
 
     const currentSkill =
-        roadmapSkills.find((skill) => {
-            const value = Number(progress?.[skill.id]) || 0;
-            return value > 0 && value < 100;
-        }) || null;
+        roadmapSkills.find(
+            (skill) => getSkillStatus(skill, progress) === "in-progress"
+        ) || null;
 
     // --------------------------------
     // Next skill
     // --------------------------------
 
     const nextSkill =
-        roadmapSkills.find((skill) => {
-            const value = Number(progress?.[skill.id]) || 0;
-            if (value > 0) return false;
-            return isSkillAvailable(skill);
-        }) || null;
+        roadmapSkills.find(
+            (skill) => getSkillStatus(skill, progress) === "available"
+        ) || null;
 
     // --------------------------------
-    // XP (Read directly from AuthContext with local fallback)
+    // XP (single source of truth: user.xp)
     // --------------------------------
 
-    const calculatedXP = completedSkills.reduce(
-        (acc, skill) => acc + (Number(skill.xp) || 0),
-        0
-    );
-
-    const totalXP =
-        user?.xp !== undefined && user?.xp !== null
-            ? Number(user.xp)
-            : calculatedXP;
+    const totalXP = Number(user?.xp) || 0;
 
     // --------------------------------
     // Current stage
@@ -95,7 +68,9 @@ export function useDashboardData() {
 
     const currentStage =
         roadmap.find((stage) =>
-            stage.skills?.some((skill) => skill.id === currentSkill?.id)
+            stage.skills?.some(
+                (skill) => String(skill.id) === String(currentSkill?.id)
+            )
         ) || null;
 
     // --------------------------------
@@ -199,6 +174,7 @@ export function useDashboardData() {
         completedSkills,
         inProgressSkills,
         lockedSkills,
+        availableSkills,
         currentSkill,
         nextSkill,
         currentStage,

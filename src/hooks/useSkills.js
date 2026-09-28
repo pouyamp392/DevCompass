@@ -7,6 +7,7 @@ import {
 
 import QuizContext from "../context/QuizContext";
 import { CATEGORIES } from "../constants/categories";
+import { getSkillStatus } from "../engine/skillStatus";
 
 export function useSkills() {
     const {
@@ -62,65 +63,15 @@ export function useSkills() {
     }, [allSkills]);
 
     // ========================================
-    // SKILL STATUS
+    // SKILL STATUS WRAPPER
     // ========================================
+    //
+    // این wrapper فقط برای سازگاری با کامپوننت‌های فعلی
+    // است که getSkillStatus(skill) را صدا می‌زنند.
+    // خود تابع اصلی در engine/skillStatus.js است.
 
-    const getSkillStatus = useCallback(
-        (skill) => {
-            if (!skill) {
-                return "locked";
-            }
-
-            const skillId =
-                String(skill.id);
-
-            const value =
-                Number(
-                    progress?.[skillId]
-                ) || 0;
-
-            // Completed
-            if (value >= 100) {
-                return "completed";
-            }
-
-            // In progress
-            if (value > 0) {
-                return "in-progress";
-            }
-
-            // Prerequisites
-            const requires =
-                Array.isArray(
-                    skill.requires
-                )
-                    ? skill.requires
-                    : [];
-
-            // No prerequisites
-            if (requires.length === 0) {
-                return "available";
-            }
-
-            // Check prerequisites
-            const hasUncompletedRequired =
-                requires.some(
-                    (reqId) =>
-                        (
-                            Number(
-                                progress?.[
-                                    String(
-                                        reqId
-                                    )
-                                ]
-                            ) || 0
-                        ) < 100
-                );
-
-            return hasUncompletedRequired
-                ? "locked"
-                : "available";
-        },
+    const getSkillStatusForSkill = useCallback(
+        (skill) => getSkillStatus(skill, progress),
         [progress]
     );
 
@@ -318,7 +269,7 @@ export function useSkills() {
             return allSkills
                 .filter((skill) => {
                     const status =
-                        getSkillStatus(
+                        getSkillStatusForSkill(
                             skill
                         );
 
@@ -332,7 +283,7 @@ export function useSkills() {
                 .slice(0, 3);
         }, [
             allSkills,
-            getSkillStatus,
+            getSkillStatusForSkill,
         ]);
 
     // ========================================
@@ -516,7 +467,7 @@ export function useSkills() {
                                 (
                                     skill
                                 ) =>
-                                    getSkillStatus(
+                                    getSkillStatusForSkill(
                                         skill
                                     ) ===
                                     "completed"
@@ -527,7 +478,7 @@ export function useSkills() {
                                 (
                                     skill
                                 ) =>
-                                    getSkillStatus(
+                                    getSkillStatusForSkill(
                                         skill
                                     ) ===
                                     "in-progress"
@@ -538,7 +489,7 @@ export function useSkills() {
                                 (
                                     skill
                                 ) =>
-                                    getSkillStatus(
+                                    getSkillStatusForSkill(
                                         skill
                                     ) ===
                                     "locked"
@@ -597,7 +548,7 @@ export function useSkills() {
             progress,
             searchTerm,
             sortBy,
-            getSkillStatus,
+            getSkillStatusForSkill,
         ]);
 
     // ========================================
@@ -609,7 +560,7 @@ export function useSkills() {
             const completed =
                 allSkills.filter(
                     (skill) =>
-                        getSkillStatus(
+                        getSkillStatusForSkill(
                             skill
                         ) ===
                         "completed"
@@ -618,7 +569,7 @@ export function useSkills() {
             const inProgress =
                 allSkills.filter(
                     (skill) =>
-                        getSkillStatus(
+                        getSkillStatusForSkill(
                             skill
                         ) ===
                         "in-progress"
@@ -631,7 +582,7 @@ export function useSkills() {
                 allSkills
                     .filter(
                         (skill) =>
-                            getSkillStatus(
+                            getSkillStatusForSkill(
                                 skill
                             ) ===
                             "completed"
@@ -690,7 +641,7 @@ export function useSkills() {
             };
         }, [
             allSkills,
-            getSkillStatus,
+            getSkillStatusForSkill,
         ]);
 
     // ========================================
@@ -758,7 +709,10 @@ export function useSkills() {
         // Functions
         // --------------------------------
 
-        getSkillStatus,
+        // این wrapper، برای سازگاری با کامپوننت‌های فعلی است.
+        // خود تابع اصلی در engine/skillStatus.js است.
+        getSkillStatus: getSkillStatusForSkill,
+
         getPrerequisiteDetails,
         buildSkillPath,
         toggleCategory,
