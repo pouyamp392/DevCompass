@@ -14,7 +14,6 @@ import { getSkillStatus } from "../engine/skillStatus";
 // چرا اینجا و نه توی engine؟ چون label و className
 // مربوط به UI هستن، نه business logic.
 
-const orderedSkills = roadmap.flatMap((stage) => stage.skills || []);
 
 const STATUS_LABELS = {
     completed: {
@@ -58,6 +57,8 @@ export function useSkillData() {
     const skill = allSkills.find(
         (item) => String(item.id) === String(id)
     );
+    const orderedSkills = roadmap.flatMap((stage) => stage.skills || []);
+
 
     const skillProgress = Number(
         progress?.[skill?.id] || 0

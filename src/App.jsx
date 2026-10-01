@@ -10,37 +10,33 @@ import Skills from "./pages/Skills";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import PublicRoute from "./components/auth/PublicRoute";
 import Profile from "./pages/Profile";
 
 export default function App() {
     return (
         <Routes>
 
-            <Route path="/" element={<Home />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            
-            <Route path="/quiz" element={<Quiz />} />
+            {/* صفحات عمومی — کاربر لاگین‌شده → dashboard */}
+            <Route element={<PublicRoute />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/quiz" element={<Quiz />} />
+                <Route path="/result" element={<Result />} />
+            </Route>
 
-            <Route path="/result" element={<Result />} />
-
+            {/* صفحات محافظت‌شده — کاربر لاگین‌نشده → login */}
             <Route element={<ProtectedRoute />}>
-
-
                 <Route element={<MainLayout />}>
-
                     <Route path="/dashboard" element={<Dashboard />} />
-
                     <Route path="/roadmap" element={<Roadmap />} />
-
                     <Route path="/skill/:id" element={<Skill />} />
-
                     <Route path="/skills" element={<Skills />} />
-
                     <Route path="/profile" element={<Profile />} />
-
                 </Route>
             </Route>
+
         </Routes>
     );
 }

@@ -40,7 +40,7 @@ export default function HeroCTA() {
                 </Link>
 
                 <Link
-                    to="/paths"
+                    to="/login"
                     className="
                         inline-flex min-h-14 items-center justify-center rounded-2xl
                         border border-white/10 bg-white/[0.045] px-7 py-3.5
@@ -52,8 +52,9 @@ export default function HeroCTA() {
                         focus-visible:ring-offset-slate-950 sm:text-base
                     "
                 >
-                    مشاهده مسیرهای برنامه‌نویسی
-                </Link>
+                    قبلاً مسیرم رو ساختم                
+                    
+                    </Link>
             </div>
         </>
     );

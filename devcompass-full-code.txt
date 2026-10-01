@@ -3607,7 +3607,7 @@ import Dashboard from "./pages/Dashboard";
 import MainLayout from "./layouts/MainLayout";
 import Skills from "./pages/Skills";
 import Register from "./pages/Register";
-import Login from "./pages/login";
+import Login from "./pages/Login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Profile from "./pages/Profile";
 
@@ -9084,7 +9084,7 @@ export function QuizProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user?.id]);
 
   // ========================================
   // LOAD ALL SKILLS
@@ -10331,20 +10331,21 @@ FILE: C:\Users\rose\desktop\devcompass\src\engine\skillStatus.js
 // ========================================
 //
 // Ø§ÛŒÙ† ØªØ§Ø¨Ø¹ ØªÙ†Ù‡Ø§ Ù…Ù†Ø¨Ø¹ Ø­Ù‚ÛŒÙ‚Øª Ø¨Ø±Ø§ÛŒ ÙˆØ¶Ø¹ÛŒØª ÛŒÚ© Ù…Ù‡Ø§Ø±Øª Ø§Ø³Øª.
-// ØªÙ…Ø§Ù… Ú©Ø§Ù…Ù¾ÙˆÙ†Ù†Øªâ€ŒÙ‡Ø§ÛŒÛŒ Ú©Ù‡ Ø¨Ø§ Ù…Ù‡Ø§Ø±Øªâ€ŒÙ‡Ø§ Ú©Ø§Ø± Ù…ÛŒâ€ŒÚ©Ù†Ù†Ø¯ Ø¨Ø§ÛŒØ¯
-// Ø§Ø² Ø§ÛŒÙ† ØªØ§Ø¨Ø¹ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ú©Ù†Ù†Ø¯.
 //
 // Ù¾Ø§Ø±Ø§Ù…ØªØ±Ù‡Ø§:
-//   skill     â†’ Ø¢Ø¨Ø¬Ú©Øª Ù…Ù‡Ø§Ø±Øª (Ø´Ø§Ù…Ù„ id Ùˆ requires)
-//   progress  â†’ Ø¢Ø¨Ø¬Ú©Øª progress (Ú©Ù„ÛŒØ¯Ù‡Ø§ Ø¹Ø¯Ø¯ÛŒ)
+//   skill          â†’ Ø¢Ø¨Ø¬Ú©Øª Ù…Ù‡Ø§Ø±Øª (Ø´Ø§Ù…Ù„ id Ùˆ requires)
+//   progress       â†’ Ø¢Ø¨Ø¬Ú©Øª progress (Ú©Ù„ÛŒØ¯Ù‡Ø§ Ø¹Ø¯Ø¯ÛŒ)
+//   orderedSkills  â†’ Ø¢Ø±Ø§ÛŒÙ‡â€ŒÛŒ Ù…Ø±ØªØ¨ Ù…Ù‡Ø§Ø±Øªâ€ŒÙ‡Ø§ (Ø§Ø®ØªÛŒØ§Ø±ÛŒ)
+//                    Ø§Ú¯Ù‡ Ø¯Ø§Ø¯Ù‡ Ø¨Ø´Ù‡ØŒ Ù…Ù†Ø·Ù‚ linear (Ù‚Ø¯Ù… Ø¨Ù‡ Ù‚Ø¯Ù…)
+//                    Ø§Ú¯Ù‡ Ù†Ø¯Ø§Ø¯Ù‡ Ø¨Ø´Ù‡ØŒ fallback Ø¨Ù‡ pre-req
 //
-// Ø®Ø±ÙˆØ¬ÛŒ: ÛŒÚ©ÛŒ Ø§Ø² Ø§ÛŒÙ† Ú†Ù‡Ø§Ø± string
+// Ø®Ø±ÙˆØ¬ÛŒ:
 //   "completed"    â†’ progress >= 100
 //   "in-progress"  â†’ 0 < progress < 100
-//   "available"    â†’ progress = 0 Ùˆ Ù‡Ù…Ù‡â€ŒÛŒ prereqÙ‡Ø§ ØªÚ©Ù…ÛŒÙ„
-//   "locked"       â†’ progress = 0 Ùˆ Ø­Ø¯Ø§Ù‚Ù„ ÛŒÙ‡ prereq Ù†Ø§Ù‚Øµ
+//   "available"    â†’ progress = 0 Ùˆ Ù†ÙˆØ¨ØªØ´Ù‡
+//   "locked"       â†’ progress = 0 Ùˆ Ù†ÙˆØ¨ØªØ´ Ù†ÛŒØ³Øª
 
-export function getSkillStatus(skill, progress = {}) {
+export function getSkillStatus(skill, progress = {}, orderedSkills = []) {
     // ----------------------------------------
     // 1. Validation
     // ----------------------------------------
@@ -10358,7 +10359,6 @@ export function getSkillStatus(skill, progress = {}) {
     // ----------------------------------------
 
     const skillId = Number(skill.id);
-
     const value = Number(progress?.[skillId]) || 0;
 
     // ----------------------------------------
@@ -10378,23 +10378,66 @@ export function getSkillStatus(skill, progress = {}) {
     }
 
     // ----------------------------------------
-    // 5. Prerequisites
+    // 5. Fallback: pre-req based (Ø¨Ø¯ÙˆÙ† orderedSkills)
     // ----------------------------------------
 
-    const requires = Array.isArray(skill.requires)
-        ? skill.requires
-        : [];
+    if (!Array.isArray(orderedSkills) || orderedSkills.length === 0) {
+        const requires = Array.isArray(skill.requires)
+            ? skill.requires
+            : [];
 
-    if (requires.length === 0) {
+        if (requires.length === 0) {
+            return "available";
+        }
+
+        const hasUncompletedRequired = requires.some((reqId) => {
+            const reqValue = Number(progress?.[Number(reqId)]) || 0;
+            return reqValue < 100;
+        });
+
+        return hasUncompletedRequired ? "locked" : "available";
+    }
+
+    // ----------------------------------------
+    // 6. Linear: Ø¨Ø± Ø§Ø³Ø§Ø³ ØªØ±ØªÛŒØ¨ roadmap
+    // ----------------------------------------
+
+    const index = orderedSkills.findIndex(
+        (s) => Number(s.id) === skillId
+    );
+
+    // skill ØªÙˆÛŒ Ù„ÛŒØ³Øª Ù†ÛŒØ³Øª â†’ fallback
+    if (index < 0) {
+        const requires = Array.isArray(skill.requires)
+            ? skill.requires
+            : [];
+
+        if (requires.length === 0) {
+            return "available";
+        }
+
+        const hasUncompletedRequired = requires.some((reqId) => {
+            const reqValue = Number(progress?.[Number(reqId)]) || 0;
+            return reqValue < 100;
+        });
+
+        return hasUncompletedRequired ? "locked" : "available";
+    }
+
+    // Ø§ÙˆÙ„ÛŒÙ† skill ØªÙˆÛŒ Ù„ÛŒØ³Øª â†’ available
+    if (index === 0) {
         return "available";
     }
 
-    const hasUncompletedRequired = requires.some((reqId) => {
-        const reqValue = Number(progress?.[Number(reqId)]) || 0;
-        return reqValue < 100;
-    });
+    // Ú†Ú© Ú©Ù† Ù‡Ù…Ù‡â€ŒÛŒ skillÙ‡Ø§ÛŒ Ù‚Ø¨Ù„ÛŒ Ú©Ø§Ù…Ù„ Ø´Ø¯Ù†
+    const allPreviousCompleted = orderedSkills
+        .slice(0, index)
+        .every((prev) => {
+            const prevValue = Number(progress?.[Number(prev.id)]) || 0;
+            return prevValue >= 100;
+        });
 
-    return hasUncompletedRequired ? "locked" : "available";
+    return allPreviousCompleted ? "available" : "locked";
 }
 
 
@@ -10632,6 +10675,7 @@ import { useParams } from "react-router-dom";
 import QuizContext from "../context/QuizContext";
 import { getSkillStatus } from "../engine/skillStatus";
 
+
 // ========================================
 // STATUS LABELS
 // ========================================
@@ -10641,6 +10685,8 @@ import { getSkillStatus } from "../engine/skillStatus";
 //
 // Ú†Ø±Ø§ Ø§ÛŒÙ†Ø¬Ø§ Ùˆ Ù†Ù‡ ØªÙˆÛŒ engineØŸ Ú†ÙˆÙ† label Ùˆ className
 // Ù…Ø±Ø¨ÙˆØ· Ø¨Ù‡ UI Ù‡Ø³ØªÙ†ØŒ Ù†Ù‡ business logic.
+
+const orderedSkills = roadmap.flatMap((stage) => stage.skills || []);
 
 const STATUS_LABELS = {
     completed: {
@@ -10773,8 +10819,8 @@ export function useSkillData() {
     const nextSkillsInStage =
         currentSkillIndex >= 0
             ? currentStageSkills.slice(
-                  currentSkillIndex + 1
-              )
+                currentSkillIndex + 1
+            )
             : [];
 
     // --------------------------------
@@ -10829,7 +10875,7 @@ export function useSkillData() {
     // Skill status (from engine)
     // --------------------------------
 
-    const statusKey = getSkillStatus(skill, progress);
+    const statusKey = getSkillStatus(skill, progress, orderedSkills);
 
     const status = STATUS_LABELS[statusKey];
 
@@ -10869,8 +10915,8 @@ export function useSkillData() {
         const remainingDays = Math.max(
             0,
             skillTime -
-                skillTime *
-                    (skillProgress / 100)
+            skillTime *
+            (skillProgress / 100)
         );
 
         const dailyHours = 2;
@@ -13029,7 +13075,7 @@ export default function Profile() {
         backend: "Backend Developer",
         ai: "AI Developer",
         devops: "DevOps Developer",
-        softSkills: "Soft Skills",
+        soft: "Soft Skills",
     };
 
     const goalTitle =
@@ -14488,6 +14534,7 @@ export default function Roadmap() {
 
     const roadmapGoal = user?.roadmap_goal ?? null;
     const [selectedSkill, setSelectedSkill] = useState(null);
+    const orderedSkills = roadmap.flatMap((stage) => stage.skills || []);
 
     const goalTitles = {
         frontend: "Frontend Developer",
@@ -14613,7 +14660,7 @@ export default function Roadmap() {
                                     <SkillCard
                                         key={skill.id}
                                         skill={skill}
-                                        status={getSkillStatus(skill, progress)}
+                                        status={getSkillStatus(skill, progress, orderedSkills)}
                                         progress={
                                             Number(
                                                 progress?.[
