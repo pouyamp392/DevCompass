@@ -3604,42 +3604,40 @@ import Result from "./pages/Result";
 import Roadmap from "./pages/Roadmap";
 import Skill from "./pages/Skill";
 import Dashboard from "./pages/Dashboard";
+import Achievements from "./pages/Achievements";
 import MainLayout from "./layouts/MainLayout";
 import Skills from "./pages/Skills";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import PublicRoute from "./components/auth/PublicRoute";
 import Profile from "./pages/Profile";
 
 export default function App() {
     return (
         <Routes>
 
-            <Route path="/" element={<Home />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            
-            <Route path="/quiz" element={<Quiz />} />
+            {/* ØµÙØ­Ø§Øª Ø¹Ù…ÙˆÙ…ÛŒ â€” Ú©Ø§Ø±Ø¨Ø± Ù„Ø§Ú¯ÛŒÙ†â€ŒØ´Ø¯Ù‡ â†’ dashboard */}
+            <Route element={<PublicRoute />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/quiz" element={<Quiz />} />
+                <Route path="/result" element={<Result />} />
+            </Route>
 
-            <Route path="/result" element={<Result />} />
-
+            {/* ØµÙØ­Ø§Øª Ù…Ø­Ø§ÙØ¸Øªâ€ŒØ´Ø¯Ù‡ â€” Ú©Ø§Ø±Ø¨Ø± Ù„Ø§Ú¯ÛŒÙ†â€ŒÙ†Ø´Ø¯Ù‡ â†’ login */}
             <Route element={<ProtectedRoute />}>
-
-
                 <Route element={<MainLayout />}>
-
                     <Route path="/dashboard" element={<Dashboard />} />
-
                     <Route path="/roadmap" element={<Roadmap />} />
-
                     <Route path="/skill/:id" element={<Skill />} />
-
                     <Route path="/skills" element={<Skills />} />
-
                     <Route path="/profile" element={<Profile />} />
-
+                    <Route path="/achievements" element={<Achievements />} />
                 </Route>
             </Route>
+
         </Routes>
     );
 }
@@ -3718,6 +3716,35 @@ export default function ProtectedRoute() {
 
     if (!user) {
         return <Navigate to="/login" replace />;
+    }
+
+    return <Outlet />;
+}
+
+
+============================================================
+FILE: C:\Users\rose\desktop\devcompass\src\components\auth\PublicRoute.jsx
+============================================================
+
+import { Navigate, Outlet } from "react-router-dom";
+import { useContext } from "react";
+
+import AuthContext from "../../context/AuthContext";
+
+export default function PublicRoute() {
+    const { user, loading } = useContext(AuthContext);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-black text-cyan-400">
+                Ø¯Ø± Ø­Ø§Ù„ Ø¨Ø±Ø±Ø³ÛŒ Ø­Ø³Ø§Ø¨...
+            </div>
+        );
+    }
+
+    // Ú©Ø§Ø±Ø¨Ø± Ù„Ø§Ú¯ÛŒÙ†â€ŒØ´Ø¯Ù‡ â†’ Ù†Ù…ÛŒâ€ŒØªÙˆÙ†Ù‡ ØµÙØ­Ø§Øª public Ø±Ùˆ Ø¨Ø¨ÛŒÙ†Ù‡
+    if (user) {
+        return <Navigate to="/dashboard" replace />;
     }
 
     return <Outlet />;
@@ -4893,7 +4920,7 @@ export default function HeroCTA() {
                 </Link>
 
                 <Link
-                    to="/paths"
+                    to="/login"
                     className="
                         inline-flex min-h-14 items-center justify-center rounded-2xl
                         border border-white/10 bg-white/[0.045] px-7 py-3.5
@@ -4905,8 +4932,9 @@ export default function HeroCTA() {
                         focus-visible:ring-offset-slate-950 sm:text-base
                     "
                 >
-                    Ù…Ø´Ø§Ù‡Ø¯Ù‡ Ù…Ø³ÛŒØ±Ù‡Ø§ÛŒ Ø¨Ø±Ù†Ø§Ù…Ù‡â€ŒÙ†ÙˆÛŒØ³ÛŒ
-                </Link>
+                    Ù‚Ø¨Ù„Ø§Ù‹ Ù…Ø³ÛŒØ±Ù… Ø±Ùˆ Ø³Ø§Ø®ØªÙ…                
+                    
+                    </Link>
             </div>
         </>
     );
@@ -9302,313 +9330,296 @@ FILE: C:\Users\rose\desktop\devcompass\src\data\questions.js
 ============================================================
 
 export const questions = [
+  // ==========================================
+  // Ø¨Ø®Ø´ Û±: Ø¹Ù„Ø§Ù‚Ù‡ (Û¸ Ø³ÙˆØ§Ù„)
+  // ==========================================
   {
     id: 1,
-    title: "ÙˆÙ‚ØªÛŒ ÛŒÚ© Ù¾Ø±ÙˆÚ˜Ù‡ Ø¬Ø°Ø§Ø¨ Ù…ÛŒâ€ŒØ¨ÛŒÙ†ÛŒØŒ Ø§ÙˆÙ„ÛŒÙ† Ú†ÛŒØ²ÛŒ Ú©Ù‡ ØªÙˆØ¬Ù‡Øª Ø±Ø§ Ø¬Ù„Ø¨ Ù…ÛŒâ€ŒÚ©Ù†Ø¯ Ú†ÛŒØ³ØªØŸ",
+    category: "interest",
+    title: "Ø§Ú¯Ø± ÛŒÚ© Ø±ÙˆØ² ÙˆÙ‚Øª Ø¢Ø²Ø§Ø¯ Ø¯Ø§Ø´ØªÙ‡ Ø¨Ø§Ø´ÛŒØŒ Ú©Ø¯ÙˆÙ… Ú©Ø§Ø± Ø¨ÛŒØ´ØªØ± Ø¨Ø±Ø§Øª Ø¬Ø°Ø§Ø¨Ù‡ØŸ",
     answers: [
       {
-        text: "Ø¸Ø§Ù‡Ø± Ùˆ Ø·Ø±Ø§Ø­ÛŒ",
-        score: {
-          frontend: 3,
-          uiux: 2,
-        },
+        text: "ÛŒÙ‡ Ú†ÛŒØ² Ù‚Ø´Ù†Ú¯ Ùˆ Ø¬Ø°Ø§Ø¨ Ø¨Ø³Ø§Ø²Ù…",
+        score: { frontend: 4 },
       },
       {
-        text: "Ù…Ù†Ø·Ù‚ Ù¾Ø´Øª Ù¾Ø±ÙˆÚ˜Ù‡",
-        score: {
-          backend: 3,
-          ai: 1,
-        },
+        text: "ÛŒÙ‡ Ú†ÛŒØ² Ø¬Ø§Ù„Ø¨ Ø¨Ø³Ø§Ø²Ù… Ú©Ù‡ Ø§Ø² Ù¾Ø´Øª Ù¾Ø±Ø¯Ù‡ Ú©Ø§Ø±Ø§ÛŒ Ù…Ø®ØªÙ„ÙÛŒ Ø§Ù†Ø¬Ø§Ù… Ø¨Ø¯Ù‡",
+        score: { backend: 4 },
       },
       {
-        text: "Ø³Ø±Ø¹Øª Ùˆ Ø¹Ù…Ù„Ú©Ø±Ø¯",
-        score: {
-          backend: 2,
-          devops: 2,
-        },
+        text: "ÛŒÙ‡ Ú†ÛŒØ² Ø¬Ø¯ÛŒØ¯ Ú©Ø´Ù Ú©Ù†Ù… Ùˆ Ø¨Ø¨ÛŒÙ†Ù… Ú©Ø§Ù…Ù¾ÛŒÙˆØªØ± Ú†ÛŒ Ù…ÛŒâ€ŒØªÙˆÙ†Ù‡ ÛŒØ§Ø¯ Ø¨Ú¯ÛŒØ±Ù‡",
+        score: { ai: 4 },
       },
       {
-        text: "Ù‡ÙˆØ´Ù…Ù†Ø¯ÛŒ Ù¾Ø±ÙˆÚ˜Ù‡",
-        score: {
-          ai: 3,
-        },
+        text: "ÛŒÙ‡ Ø³ÛŒØ³ØªÙ… Ø¯Ø±Ø³Øª Ú©Ù†Ù… Ú©Ù‡ Ù‡Ù…Ù‡â€ŒÚ†ÛŒØ² Ù…Ø±ØªØ¨ Ùˆ Ø¨Ø¯ÙˆÙ† Ø¯Ø±Ø¯Ø³Ø± Ú©Ø§Ø± Ú©Ù†Ù‡",
+        score: { devops: 4 },
       },
     ],
   },
 
-  // {
-  //   id: 2,
-  //   title: "Ø§Ú¯Ø± Ù‚Ø±Ø§Ø± Ø¨Ø§Ø´Ø¯ ÛŒÚ© Ø³Ø§Ù„ ÙÙ‚Ø· Ø±ÙˆÛŒ ÛŒÚ© Ú†ÛŒØ² Ú©Ø§Ø± Ú©Ù†ÛŒØŒ Ú©Ø¯Ø§Ù… Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ù…ÛŒâ€ŒÚ©Ù†ÛŒØŸ",
-  //   answers: [
-  //     {
-  //       text: "ÙˆØ¨â€ŒØ³Ø§ÛŒØª",
-  //       score: { frontend: 2, backend: 2 },
-  //     },
-  //     {
-  //       text: "Ø§Ù¾Ù„ÛŒÚ©ÛŒØ´Ù† Ù…ÙˆØ¨Ø§ÛŒÙ„",
-  //       score: { mobile: 3 },
-  //     },
-  //     {
-  //       text: "Ø¨Ø§Ø²ÛŒ",
-  //       score: { game: 3 },
-  //     },
-  //     {
-  //       text: "Ù‡ÙˆØ´ Ù…ØµÙ†ÙˆØ¹ÛŒ",
-  //       score: { ai: 3 },
-  //     },
-  //   ],
-  // },
+  {
+    id: 2,
+    category: "interest",
+    title: "ÙØ±Ø¶ Ú©Ù† Ù…ÛŒâ€ŒØ®ÙˆØ§ÛŒ Ø¨Ø±Ø§ÛŒ Ø®ÙˆØ¯Øª ÛŒÙ‡ Ø³Ø§ÛŒØª Ø¨Ø³Ø§Ø²ÛŒ. Ú©Ø¯ÙˆÙ… Ù‚Ø³Ù…Øª Ø¨ÛŒØ´ØªØ± Ù‡ÛŒØ¬Ø§Ù†â€ŒØ²Ø¯Ù‡â€ŒØ§Øª Ù…ÛŒâ€ŒÚ©Ù†Ù‡ØŸ",
+    answers: [
+      {
+        text: "Ø§ÛŒÙ†Ú©Ù‡ Ø¸Ø§Ù‡Ø±Ø´ Ø¯Ù‚ÛŒÙ‚Ø§Ù‹ Ù‡Ù…ÙˆÙ† Ú†ÛŒØ²ÛŒ Ø¨Ø´Ù‡ Ú©Ù‡ ØªÙˆÛŒ Ø°Ù‡Ù†Ù…Ù‡",
+        score: { frontend: 4 },
+      },
+      {
+        text: "Ø§ÛŒÙ†Ú©Ù‡ ÙˆÙ‚ØªÛŒ Ø±ÙˆÛŒ Ø¯Ú©Ù…Ù‡â€ŒÙ‡Ø§ Ù…ÛŒâ€ŒØ²Ù†Ù†ØŒ Ø§ØªÙØ§Ù‚Ø§Øª Ù…Ø®ØªÙ„ÙÛŒ Ù¾Ø´Øª ØµØ­Ù†Ù‡ Ø¨ÛŒÙØªÙ‡",
+        score: { backend: 4 },
+      },
+      {
+        text: "Ø§ÛŒÙ†Ú©Ù‡ Ø³Ø§ÛŒØª Ø¨ØªÙˆÙ†Ù‡ Ø¨Ø¹Ø¶ÛŒ Ú†ÛŒØ²Ù‡Ø§ Ø±Ùˆ Ø®ÙˆØ¯Ø´ Ø¨ÙÙ‡Ù…Ù‡ ÛŒØ§ Ù¾ÛŒØ´â€ŒØ¨ÛŒÙ†ÛŒ Ú©Ù†Ù‡",
+        score: { ai: 4 },
+      },
+      {
+        text: "Ø§ÛŒÙ†Ú©Ù‡ Ø³Ø±ÛŒØ¹ØŒ Ù¾Ø§ÛŒØ¯Ø§Ø± Ùˆ Ù‡Ù…ÛŒØ´Ù‡ Ø¢Ù…Ø§Ø¯Ù‡ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø¨Ø§Ø´Ù‡",
+        score: { devops: 4 },
+      },
+    ],
+  },
 
-  // {
-  //   id: 3,
-  //   title: "Ø¨ÛŒØ´ØªØ± Ø§Ø² Ú†Ù‡ Ú©Ø§Ø±ÛŒ Ù„Ø°Øª Ù…ÛŒâ€ŒØ¨Ø±ÛŒØŸ",
-  //   answers: [
-  //     {
-  //       text: "Ø®Ù„Ù‚ Ú†ÛŒØ²Ù‡Ø§ÛŒ Ø²ÛŒØ¨Ø§",
-  //       score: { frontend: 3 },
-  //     },
-  //     {
-  //       text: "Ø­Ù„ Ù…Ø³Ø¦Ù„Ù‡",
-  //       score: { backend: 3, ai: 1 },
-  //     },
-  //     {
-  //       text: "ØªØ­Ù„ÛŒÙ„ Ø¯Ø§Ø¯Ù‡",
-  //       score: { ai: 3 },
-  //     },
-  //     {
-  //       text: "Ø³Ø§Ø®Øª Ø§Ø¨Ø²Ø§Ø±",
-  //       score: { backend: 2, devops: 2 },
-  //     },
-  //   ],
-  // },
+  {
+    id: 3,
+    category: "interest",
+    title: "Ú©Ø¯ÙˆÙ… Ø¬Ù…Ù„Ù‡ Ø¨ÛŒØ´ØªØ± Ø´Ø¨ÛŒÙ‡ ØªÙˆØ¦Ù‡ØŸ",
+    answers: [
+      {
+        text: "ÙˆÙ‚ØªÛŒ Ú†ÛŒØ²ÛŒ Ù‚Ø´Ù†Ú¯ Ù…ÛŒâ€ŒØ¨ÛŒÙ†Ù…ØŒ Ø¯ÙˆØ³Øª Ø¯Ø§Ø±Ù… Ø®ÙˆØ¯Ù… Ù‡Ù… Ø¨Ø³Ø§Ø²Ù…Ø´",
+        score: { frontend: 4 },
+      },
+      {
+        text: "Ù…Ø¹Ù…ÙˆÙ„Ø§Ù‹ Ú©Ù†Ø¬Ú©Ø§ÙˆÙ… Ø¨ÙÙ‡Ù…Ù… Ù¾Ø´Øª Ù…Ø§Ø¬Ø±Ø§ Ú†Ù‡ Ø®Ø¨Ø±Ù‡",
+        score: { backend: 4 },
+      },
+      {
+        text: "Ø§Ø² Ú©Ø´Ù Ú©Ø±Ø¯Ù† Ú†ÛŒØ²Ù‡Ø§ÛŒÛŒ Ú©Ù‡ Ø¨Ù‚ÛŒÙ‡ Ù‡Ù†ÙˆØ² Ù†ÙÙ‡Ù…ÛŒØ¯Ù† Ù„Ø°Øª Ù…ÛŒâ€ŒØ¨Ø±Ù…",
+        score: { ai: 4 },
+      },
+      {
+        text: "Ø¯ÙˆØ³Øª Ø¯Ø§Ø±Ù… Ù‡Ù…Ù‡â€ŒÚ†ÛŒØ² Ù…Ø±ØªØ¨ØŒ Ù…Ù†Ø¸Ù… Ùˆ Ø¯Ø±Ø³Øª Ù¾ÛŒØ´ Ø¨Ø±Ù‡",
+        score: { devops: 4 },
+      },
+    ],
+  },
 
-  // {
-  //   id: 4,
-  //   title: "ÙˆÙ‚ØªÛŒ Ø¨Ù‡ Ù…Ø´Ú©Ù„ Ù…ÛŒâ€ŒØ®ÙˆØ±ÛŒ...",
-  //   answers: [
-  //     {
-  //       text: "Ø´Ø±ÙˆØ¹ Ø¨Ù‡ Ø¢Ø²Ù…Ø§ÛŒØ´ Ù…ÛŒâ€ŒÚ©Ù†Ù…",
-  //       score: { frontend: 2, mobile: 1 },
-  //     },
-  //     {
-  //       text: "Ù…ÛŒâ€ŒØ®ÙˆØ§Ù… Ø¨ÙÙ‡Ù…Ù… Ú†Ø±Ø§ Ø§ØªÙØ§Ù‚ Ø§ÙØªØ§Ø¯Ù‡",
-  //       score: { backend: 2, ai: 2 },
-  //     },
-  //     {
-  //       text: "Ù…Ø³ØªÙ†Ø¯Ø§Øª Ù…ÛŒâ€ŒØ®ÙˆÙ†Ù…",
-  //       score: { backend: 2, devops: 2 },
-  //     },
-  //     {
-  //       text: "Ø§Ø² Ø¯ÛŒÚ¯Ø±Ø§Ù† Ú©Ù…Ú© Ù…ÛŒâ€ŒÚ¯ÛŒØ±Ù…",
-  //       score: { frontend: 1 },
-  //     },
-  //   ],
-  // },
+  {
+    id: 4,
+    category: "interest",
+    title: "Ø§Ú¯Ø± ÛŒÙ‡ Ø¨Ø§Ø²ÛŒ Ø¬Ø¯ÛŒØ¯ Ø±ÙˆÛŒ Ú©Ø§Ù…Ù¾ÛŒÙˆØªØ±Øª Ø¯Ø§Ø´ØªÙ‡ Ø¨Ø§Ø´ÛŒØŒ Ø¨ÛŒØ´ØªØ± Ø¨Ù‡ Ú†ÛŒ ØªÙˆØ¬Ù‡ Ù…ÛŒâ€ŒÚ©Ù†ÛŒØŸ",
+    answers: [
+      {
+        text: "Ø¸Ø§Ù‡Ø±ØŒ Ø±Ù†Ú¯â€ŒÙ‡Ø§ Ùˆ Ú†ÛŒØ²Ù‡Ø§ÛŒÛŒ Ú©Ù‡ Ø±ÙˆÛŒ ØµÙØ­Ù‡ Ù…ÛŒâ€ŒØ¨ÛŒÙ†Ù…",
+        score: { frontend: 4 },
+      },
+      {
+        text: "Ø§ÛŒÙ†Ú©Ù‡ Ø¨Ø§Ø²ÛŒ Ú†Ø·ÙˆØ± Ú©Ø§Ø± Ù…ÛŒâ€ŒÚ©Ù†Ù‡ Ùˆ Ú†Ù‡ Ø§ØªÙØ§Ù‚Ø§ØªÛŒ Ù¾Ø´ØªØ´ Ù…ÛŒâ€ŒØ§ÙØªÙ‡",
+        score: { backend: 4 },
+      },
+      {
+        text: "Ø§ÛŒÙ†Ú©Ù‡ Ø¨Ø§Ø²ÛŒ Ú†Ø·ÙˆØ± Ø±ÙØªØ§Ø± Ù…Ù†Ùˆ Ù…ÛŒâ€ŒÙÙ‡Ù…Ù‡ Ùˆ Ø®ÙˆØ¯Ø´ ØªØµÙ…ÛŒÙ… Ù…ÛŒâ€ŒÚ¯ÛŒØ±Ù‡",
+        score: { ai: 4 },
+      },
+      {
+        text: "Ø§ÛŒÙ†Ú©Ù‡ Ø¨Ø§Ø²ÛŒ Ú†Ù‚Ø¯Ø± Ø±ÙˆØ§Ù† Ùˆ Ø¨Ø¯ÙˆÙ† Ù…Ø´Ú©Ù„ Ø§Ø¬Ø±Ø§ Ù…ÛŒâ€ŒØ´Ù‡",
+        score: { devops: 4 },
+      },
+    ],
+  },
 
-  // {
-  //   id: 5,
-  //   title: "Ø¯ÙˆØ³Øª Ø¯Ø§Ø±ÛŒ Ù†ØªÛŒØ¬Ù‡ Ú©Ø§Ø±Øª...",
-  //   answers: [
-  //     {
-  //       text: "Ù‡Ù…Ø§Ù† Ù„Ø­Ø¸Ù‡ Ø¯ÛŒØ¯Ù‡ Ø´ÙˆØ¯",
-  //       score: { frontend: 3 },
-  //     },
-  //     {
-  //       text: "Ø¨Ø¹Ø¯Ø§Ù‹ Ø§Ø«Ø±Ø´ Ù…Ø´Ø®Øµ Ø´ÙˆØ¯",
-  //       score: { backend: 2, ai: 2 },
-  //     },
-  //   ],
-  // },
+  {
+    id: 5,
+    category: "interest",
+    title: "ÙˆÙ‚ØªÛŒ Ú©Ø³ÛŒ Ø§Ø²Øª Ù…ÛŒâ€ŒÙ¾Ø±Ø³Ù‡ Â«Ú†ÛŒÚ©Ø§Ø± Ù…ÛŒâ€ŒÚ©Ù†ÛŒØŸÂ»ØŒ Ø¯ÙˆØ³Øª Ø¯Ø§Ø±ÛŒ Ú†ÛŒ Ø¨Ú¯ÛŒØŸ",
+    answers: [
+      {
+        text: "Ø³Ø§ÛŒØªâ€ŒÙ‡Ø§ Ùˆ Ø§Ù¾Ù„ÛŒÚ©ÛŒØ´Ù†â€ŒÙ‡Ø§ÛŒ Ø²ÛŒØ¨Ø§ Ù…ÛŒâ€ŒØ³Ø§Ø²Ù…",
+        score: { frontend: 4 },
+      },
+      {
+        text: "Ù…Ø´Ú©Ù„Ø§Øª Ù¾ÛŒÚ†ÛŒØ¯Ù‡ Ø±Ùˆ Ø­Ù„ Ù…ÛŒâ€ŒÚ©Ù†Ù…",
+        score: { backend: 4 },
+      },
+      {
+        text: "Ø¨Ø§ Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ Ùˆ Ù‡ÙˆØ´ Ù…ØµÙ†ÙˆØ¹ÛŒ Ú©Ø§Ø± Ù…ÛŒâ€ŒÚ©Ù†Ù…",
+        score: { ai: 4 },
+      },
+      {
+        text: "Ø³ÛŒØ³ØªÙ…â€ŒÙ‡Ø§ Ø±Ùˆ Ù¾Ø§ÛŒØ¯Ø§Ø± Ùˆ Ø³Ø±ÛŒØ¹ Ù†Ú¯Ù‡ Ù…ÛŒâ€ŒØ¯Ø§Ø±Ù…",
+        score: { devops: 4 },
+      },
+    ],
+  },
 
-  // {
-  //   id: 6,
-  //   title: "Ø§Ú¯Ø± Ø¨ÛŒÙ† Ø§ÛŒÙ†â€ŒÙ‡Ø§ ÛŒÚ©ÛŒ Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒ...",
-  //   answers: [
-  //     {
-  //       text: "Ø·Ø±Ø§Ø­ÛŒ Ø±Ø§Ø¨Ø· Ú©Ø§Ø±Ø¨Ø±ÛŒ",
-  //       score: { frontend: 3 },
-  //     },
-  //     {
-  //       text: "Ù†ÙˆØ´ØªÙ† API",
-  //       score: { backend: 3 },
-  //     },
-  //     {
-  //       text: "ØªØ­Ù„ÛŒÙ„ Ø¯Ø§Ø¯Ù‡",
-  //       score: { ai: 3 },
-  //     },
-  //     {
-  //       text: "Ù…Ø¯ÛŒØ±ÛŒØª Ø³Ø±ÙˆØ±",
-  //       score: { devops: 3 },
-  //     },
-  //   ],
-  // },
+  {
+    id: 6,
+    category: "interest",
+    title: "Ú©Ø¯ÙˆÙ… Ù…ÙˆÙÙ‚ÛŒØª Ø¨ÛŒØ´ØªØ± Ø®ÙˆØ´Ø­Ø§Ù„Øª Ù…ÛŒâ€ŒÚ©Ù†Ù‡ØŸ",
+    answers: [
+      {
+        text: "ÛŒÙ‡ Ú†ÛŒØ²ÛŒ Ø³Ø§Ø®ØªÙ… Ú©Ù‡ Ø®ÙˆØ¯Ù… Ø§Ø² Ø¯ÛŒØ¯Ù†Ø´ Ú©ÛŒÙ Ù…ÛŒâ€ŒÚ©Ù†Ù…",
+        score: { frontend: 4 },
+      },
+      {
+        text: "ÛŒÙ‡ Ù…Ø´Ú©Ù„ Ø³Ø®Øª Ø±Ùˆ Ø¨Ø§Ù„Ø§Ø®Ø±Ù‡ Ø­Ù„ Ú©Ø±Ø¯Ù…",
+        score: { backend: 4 },
+      },
+      {
+        text: "ÛŒÙ‡ Ú†ÛŒØ² Ø¹Ø¬ÛŒØ¨ Ùˆ Ø¬Ø¯ÛŒØ¯ Ø±Ùˆ ÙÙ‡Ù…ÛŒØ¯Ù…",
+        score: { ai: 4 },
+      },
+      {
+        text: "ÛŒÙ‡ Ú©Ø§Ø±ÛŒ Ú©Ø±Ø¯Ù… Ù‡Ù…Ù‡â€ŒÚ†ÛŒØ² Ø±Ø§Ø­Øª Ùˆ Ø¨ÛŒâ€ŒØ¯Ø±Ø¯Ø³Ø± Ø§Ø¬Ø±Ø§ Ø¨Ø´Ù‡",
+        score: { devops: 4 },
+      },
+    ],
+  },
 
-  // {
-  //   id: 7,
-  //   title: "Ú©Ø¯Ø§Ù… Ù…Ø­ÛŒØ· Ø±Ø§ Ø¨ÛŒØ´ØªØ± Ø¯ÙˆØ³Øª Ø¯Ø§Ø±ÛŒØŸ",
-  //   answers: [
-  //     {
-  //       text: "Ú©Ø§Ø± Ø¨Ø§ Ù…Ø´ØªØ±ÛŒ",
-  //       score: { frontend: 2 },
-  //     },
-  //     {
-  //       text: "Ú©Ø§Ø± Ø¨Ø§ Ø³ÛŒØ³ØªÙ…",
-  //       score: { backend: 2, devops: 2 },
-  //     },
-  //     {
-  //       text: "Ú©Ø§Ø± Ø¨Ø§ Ø¯Ø§Ø¯Ù‡",
-  //       score: { ai: 3 },
-  //     },
-  //   ],
-  // },
+  {
+    id: 7,
+    category: "interest",
+    title: "Ø§Ú¯Ù‡ Ù‚Ø±Ø§Ø± Ø¨Ø§Ø´Ù‡ Ø¨Ø§ Ø¨Ø±Ù†Ø§Ù…Ù‡â€ŒÙ†ÙˆÛŒØ³ÛŒ ÛŒÙ‡ Ú†ÛŒØ² Ø®ÙÙ† Ø¨Ø³Ø§Ø²ÛŒØŒ Ú©Ø¯ÙˆÙ… Ø§ÛŒØ¯Ù‡ Ø¨ÛŒØ´ØªØ± Ø¬Ø°Ø¨Øª Ù…ÛŒâ€ŒÚ©Ù†Ù‡ØŸ",
+    answers: [
+      {
+        text: "ÛŒÚ© Ø³Ø§ÛŒØª Ø®ÛŒÙ„ÛŒ Ø²ÛŒØ¨Ø§ Ùˆ Ø®Ø§Øµ",
+        score: { frontend: 4 },
+      },
+      {
+        text: "ÛŒÚ© Ø¨Ø±Ù†Ø§Ù…Ù‡ Ú©Ù‡ Ú©Ø§Ø±Ù‡Ø§ÛŒ Ø²ÛŒØ§Ø¯ÛŒ Ø±Ø§ Ø®ÙˆØ¯Ø´ Ø§Ù†Ø¬Ø§Ù… Ø¨Ø¯Ù‡",
+        score: { backend: 4 },
+      },
+      {
+        text: "Ú†ÛŒØ²ÛŒ Ú©Ù‡ Ø¨ØªÙˆÙ†Ù‡ Ø§Ø² Ø§Ø·Ù„Ø§Ø¹Ø§Øª ÛŒØ§Ø¯ Ø¨Ú¯ÛŒØ±Ù‡ Ùˆ Ø¨Ø§Ù‡ÙˆØ´â€ŒØªØ± Ø¨Ø´Ù‡",
+        score: { ai: 4 },
+      },
+      {
+        text: "Ø³ÛŒØ³ØªÙ…ÛŒ Ú©Ù‡ Ø¨ØªÙˆÙ†Ù‡ ØªØ¹Ø¯Ø§Ø¯ Ø®ÛŒÙ„ÛŒ Ø²ÛŒØ§Ø¯ÛŒ Ú©Ø§Ø±Ø¨Ø± Ø±Ùˆ Ø¨Ø¯ÙˆÙ† Ù…Ø´Ú©Ù„ Ù…Ø¯ÛŒØ±ÛŒØª Ú©Ù†Ù‡",
+        score: { devops: 4 },
+      },
+    ],
+  },
 
-  // {
-  //   id: 8,
-  //   title: "Ø¨ÛŒØ´ØªØ± Ø¯ÙˆØ³Øª Ø¯Ø§Ø±ÛŒ...",
-  //   answers: [
-  //     {
-  //       text: "Ø·Ø±Ø§Ø­ÛŒ Ú©Ù†ÛŒ",
-  //       score: { frontend: 3 },
-  //     },
-  //     {
-  //       text: "Ø¨Ø±Ù†Ø§Ù…Ù‡â€ŒØ±ÛŒØ²ÛŒ Ú©Ù†ÛŒ",
-  //       score: { backend: 2 },
-  //     },
-  //     {
-  //       text: "ØªØ­Ù‚ÛŒÙ‚ Ú©Ù†ÛŒ",
-  //       score: { ai: 3 },
-  //     },
-  //   ],
-  // },
+  {
+    id: 8,
+    category: "interest",
+    title: "Ø¯ÙˆØ³Øª Ø¯Ø§Ø±ÛŒ ÙˆÙ‚ØªÛŒ Ø¨Ø±Ù†Ø§Ù…Ù‡â€ŒÙ†ÙˆÛŒØ³ÛŒ ÛŒØ§Ø¯ Ú¯Ø±ÙØªÛŒØŒ Ø¨ÛŒØ´ØªØ± Ú†Ù‡ Ø­Ø³ÛŒ Ø¯Ø§Ø´ØªÙ‡ Ø¨Ø§Ø´ÛŒØŸ",
+    answers: [
+      {
+        text: "Â«Ù…Ù† ÙˆØ§Ù‚Ø¹Ø§Ù‹ Ù…ÛŒâ€ŒØªÙˆÙ†Ù… Ú†ÛŒØ²Ù‡Ø§ÛŒ Ø¬Ø°Ø§Ø¨ Ø¨Ø³Ø§Ø²Ù…!Â»",
+        score: { frontend: 4 },
+      },
+      {
+        text: "Â«Ù…Ù† Ù…ÛŒâ€ŒØªÙˆÙ†Ù… Ù…Ø³Ø¦Ù„Ù‡â€ŒÙ‡Ø§ÛŒ Ø³Ø®Øª Ø±Ùˆ Ø­Ù„ Ú©Ù†Ù…!Â»",
+        score: { backend: 4 },
+      },
+      {
+        text: "Â«Ù…Ù† Ù…ÛŒâ€ŒØªÙˆÙ†Ù… Ú†ÛŒØ²Ù‡Ø§ÛŒÛŒ Ø¨Ø³Ø§Ø²Ù… Ú©Ù‡ Ù‡ÙˆØ´Ù…Ù†Ø¯ Ø¨Ø§Ø´Ù†!Â»",
+        score: { ai: 4 },
+      },
+      {
+        text: "Â«Ù…Ù† Ù…ÛŒâ€ŒØªÙˆÙ†Ù… Ø³ÛŒØ³ØªÙ…â€ŒÙ‡Ø§ÛŒ Ø¨Ø²Ø±Ú¯ Ùˆ Ù‚Ø§Ø¨Ù„ Ø§Ø¹ØªÙ…Ø§Ø¯ Ø¨Ø³Ø§Ø²Ù…!Â»",
+        score: { devops: 4 },
+      },
+    ],
+  },
 
-  // {
-  //   id: 9,
-  //   title: "Ø¯ÙˆØ³Øª Ø¯Ø§Ø±ÛŒ Ø¨ÛŒØ´ØªØ± Ø¨Ø§ Ú†Ù‡ Ú†ÛŒØ²ÛŒ Ú©Ø§Ø± Ú©Ù†ÛŒØŸ",
-  //   answers: [
-  //     {
-  //       text: "ØªØµÙˆÛŒØ±",
-  //       score: { frontend: 3 },
-  //     },
-  //     {
-  //       text: "Ù…ØªÙ†",
-  //       score: { backend: 2 },
-  //     },
-  //     {
-  //       text: "Ø§Ø¹Ø¯Ø§Ø¯",
-  //       score: { ai: 3 },
-  //     },
-  //   ],
-  // },
+  // ==========================================
+  // Ø¨Ø®Ø´ Û²: Ø³Ø·Ø­ (Û± Ø³ÙˆØ§Ù„)
+  // ==========================================
+  {
+    id: 9,
+    category: "level",
+    title: "Ú†Ù‚Ø¯Ø± Ø¨Ø§ Ø¨Ø±Ù†Ø§Ù…Ù‡â€ŒÙ†ÙˆÛŒØ³ÛŒ Ø¢Ø´Ù†Ø§ÛŒÛŒØŸ",
+    answers: [
+      {
+        text: "Ù‡ÛŒÚ†ÛŒØŒ ØªØ§Ø²Ù‡ Ù…ÛŒâ€ŒØ®ÙˆØ§Ù… Ø´Ø±ÙˆØ¹ Ú©Ù†Ù…",
+        profile: "beginner",
+      },
+      {
+        text: "ÛŒÙ‡ Ú©Ù… Ø¨Ø§ HTML/CSS ÛŒØ§ Ù¾Ø§ÛŒØªÙˆÙ† Ú©Ø§Ø± Ú©Ø±Ø¯Ù…",
+        profile: "intermediate",
+      },
+      {
+        text: "Ù¾Ø±ÙˆÚ˜Ù‡â€ŒÙ‡Ø§ÛŒ Ú©ÙˆÚ†ÛŒÚ© Ø³Ø§Ø®ØªÙ…",
+        profile: "advanced",
+      },
+    ],
+  },
 
-  // {
-  //   id: 10,
-  //   title: "Ù‡Ø¯ÙØª Ø§Ø² Ø¨Ø±Ù†Ø§Ù…Ù‡â€ŒÙ†ÙˆÛŒØ³ÛŒ Ú†ÛŒØ³ØªØŸ",
-  //   answers: [
-  //     {
-  //       text: "ÙØ±ÛŒÙ„Ù†Ø³",
-  //       score: { frontend: 2, mobile: 2 },
-  //     },
-  //     {
-  //       text: "Ø§Ø³ØªØ®Ø¯Ø§Ù…",
-  //       score: { backend: 2 },
-  //     },
-  //     {
-  //       text: "Ø§Ø³ØªØ§Ø±ØªØ§Ù¾",
-  //       score: { frontend: 1, backend: 1 },
-  //     },
-  //     {
-  //       text: "ØªØ­Ù‚ÛŒÙ‚",
-  //       score: { ai: 3 },
-  //     },
-  //   ],
-  // },
+  // ==========================================
+  // Ø¨Ø®Ø´ Û³: Ù‡Ø¯Ù Ø´ØºÙ„ÛŒ (Û± Ø³ÙˆØ§Ù„)
+  // ==========================================
+  {
+    id: 10,
+    category: "goal",
+    title: "Ù‡Ø¯Ù Ø§ØµÙ„ÛŒØª Ø§Ø² ÛŒØ§Ø¯Ú¯ÛŒØ±ÛŒ Ø¨Ø±Ù†Ø§Ù…Ù‡â€ŒÙ†ÙˆÛŒØ³ÛŒ Ú†ÛŒÙ‡ØŸ",
+    answers: [
+      {
+        text: "Ù…ÛŒâ€ŒØ®ÙˆØ§Ù… Ø´ØºÙ„ Ù¾ÛŒØ¯Ø§ Ú©Ù†Ù…",
+        profile: "employment",
+      },
+      {
+        text: "Ù…ÛŒâ€ŒØ®ÙˆØ§Ù… ÙØ±ÛŒÙ„Ù†Ø³ Ú©Ù†Ù…",
+        profile: "freelance",
+      },
+      {
+        text: "Ù…ÛŒâ€ŒØ®ÙˆØ§Ù… Ø§Ø³ØªØ§Ø±ØªØ§Ù¾ Ø®ÙˆØ¯Ù… Ø±Ùˆ Ø¨Ø³Ø§Ø²Ù…",
+        profile: "startup",
+      },
+      {
+        text: "ÙÙ‚Ø· Ø¨Ø±Ø§ÛŒ Ø¹Ù„Ø§Ù‚Ù‡ Ùˆ ÛŒØ§Ø¯Ú¯ÛŒØ±ÛŒ",
+        profile: "hobby",
+      },
+    ],
+  },
 
-  // {
-  //   id: 11,
-  //   title: "Ø§Ú¯Ø± Ù…Ø¬Ø¨ÙˆØ± Ø¨Ø§Ø´ÛŒ ÛŒÚ© Ú©Ø§Ø± Ø±Ø§ Ù‡Ø± Ø±ÙˆØ² Ø§Ù†Ø¬Ø§Ù… Ø¨Ø¯Ù‡ÛŒ...",
-  //   answers: [
-  //     {
-  //       text: "Ø³Ø§Ø®Øª ØµÙØ­Ù‡ Ø¬Ø¯ÛŒØ¯",
-  //       score: { frontend: 3 },
-  //     },
-  //     {
-  //       text: "Ø­Ù„ Ø¨Ø§Ú¯",
-  //       score: { backend: 2 },
-  //     },
-  //     {
-  //       text: "Ø¢Ù…ÙˆØ²Ø´ Ù…Ø¯Ù„",
-  //       score: { ai: 3 },
-  //     },
-  //   ],
-  // },
+  // ==========================================
+  // Ø¨Ø®Ø´ Û´: Ø²Ù…Ø§Ù† Ø¯Ø± Ø¯Ø³ØªØ±Ø³ (Û± Ø³ÙˆØ§Ù„)
+  // ==========================================
+  {
+    id: 11,
+    category: "time",
+    title: "Ø±ÙˆØ²Ø§Ù†Ù‡ Ú†Ù‚Ø¯Ø± Ù…ÛŒâ€ŒØªÙˆÙ†ÛŒ ÙˆÙ‚Øª Ø¨Ø°Ø§Ø±ÛŒØŸ",
+    answers: [
+      {
+        text: "Ø±ÙˆØ²ÛŒ Û± Ø³Ø§Ø¹Øª ÛŒØ§ Ú©Ù…ØªØ±",
+        profile: "low",
+      },
+      {
+        text: "Ø±ÙˆØ²ÛŒ Û²-Û³ Ø³Ø§Ø¹Øª",
+        profile: "medium",
+      },
+      {
+        text: "Ø±ÙˆØ²ÛŒ Û´ Ø³Ø§Ø¹Øª ÛŒØ§ Ø¨ÛŒØ´ØªØ±",
+        profile: "high",
+      },
+    ],
+  },
 
-  // {
-  //   id: 12,
-  //   title: "Ú©Ø¯Ø§Ù… Ø¬Ù…Ù„Ù‡ Ø¨Ù‡ ØªÙˆ Ù†Ø²Ø¯ÛŒÚ©â€ŒØªØ± Ø§Ø³ØªØŸ",
-  //   answers: [
-  //     {
-  //       text: "Ø®Ù„Ø§Ù‚Ù…",
-  //       score: { frontend: 2 },
-  //     },
-  //     {
-  //       text: "ØªØ­Ù„ÛŒÙ„â€ŒÚ¯Ø±Ù…",
-  //       score: { backend: 2, ai: 2 },
-  //     },
-  //     {
-  //       text: "Ù…Ù†Ø¸Ù…Ù…",
-  //       score: { devops: 3 },
-  //     },
-  //   ],
-  // },
-
-  // {
-  //   id: 13,
-  //   title: "Ø¨ÛŒØ´ØªØ± Ø¯ÙˆØ³Øª Ø¯Ø§Ø±ÛŒ...",
-  //   answers: [
-  //     {
-  //       text: "Ú†ÛŒØ²ÛŒ Ø±Ø§ Ø§Ø² ØµÙØ± Ø¨Ø³Ø§Ø²ÛŒ",
-  //       score: { frontend: 2, backend: 2 },
-  //     },
-  //     {
-  //       text: "Ú†ÛŒØ²ÛŒ Ø±Ø§ Ø¨Ù‡ÛŒÙ†Ù‡ Ú©Ù†ÛŒ",
-  //       score: { devops: 3 },
-  //     },
-  //   ],
-  // },
-
-  // {
-  //   id: 14,
-  //   title: "ÙˆÙ‚ØªÛŒ Ø®Ø³ØªÙ‡ Ù…ÛŒâ€ŒØ´ÙˆÛŒ...",
-  //   answers: [
-  //     {
-  //       text: "Ø¨Ù‡ Ù†ØªÛŒØ¬Ù‡ ÙÚ©Ø± Ù…ÛŒâ€ŒÚ©Ù†Ù…",
-  //       score: { frontend: 1 },
-  //     },
-  //     {
-  //       text: "Ø¨Ù‡ ÛŒØ§Ø¯Ú¯ÛŒØ±ÛŒ Ø§Ø¯Ø§Ù…Ù‡ Ù…ÛŒâ€ŒØ¯Ù‡Ù…",
-  //       score: { ai: 2, backend: 2 },
-  //     },
-  //   ],
-  // },
-
-  // {
-  //   id: 15,
-  //   title: "Ø§Ú¯Ø± Ø§Ù…Ø±ÙˆØ² Ù‚Ø±Ø§Ø± Ø¨Ø§Ø´Ø¯ Ù…Ø³ÛŒØ±Øª Ø±Ø§ Ø´Ø±ÙˆØ¹ Ú©Ù†ÛŒ...",
-  //   answers: [
-  //     {
-  //       text: "Ø¯ÙˆØ³Øª Ø¯Ø§Ø±Ù… Ø³Ø±ÛŒØ¹ Ø§ÙˆÙ„ÛŒÙ† Ù¾Ø±ÙˆÚ˜Ù‡ Ø±Ø§ Ø¨Ø¨ÛŒÙ†Ù…",
-  //       score: { frontend: 3 },
-  //     },
-  //     {
-  //       text: "Ø¯ÙˆØ³Øª Ø¯Ø§Ø±Ù… Ù¾Ø§ÛŒÙ‡ Ø±Ø§ Ø¹Ù…ÛŒÙ‚ ÛŒØ§Ø¯ Ø¨Ú¯ÛŒØ±Ù…",
-  //       score: { backend: 2, ai: 2 },
-  //     },
-  //     {
-  //       text: "Ø¯ÙˆØ³Øª Ø¯Ø§Ø±Ù… Ú†ÛŒØ²Ù‡Ø§ÛŒ Ø¬Ø¯ÛŒØ¯ Ú©Ø´Ù Ú©Ù†Ù…",
-  //       score: { ai: 3 },
-  //     },
-  //   ],
-  // },
+  // ==========================================
+  // Ø¨Ø®Ø´ Ûµ: Ø³Ø¨Ú© ÛŒØ§Ø¯Ú¯ÛŒØ±ÛŒ (Û± Ø³ÙˆØ§Ù„)
+  // ==========================================
+  {
+    id: 12,
+    category: "style",
+    title: "Ø¯ÙˆØ³Øª Ø¯Ø§Ø±ÛŒ Ú†Ø·ÙˆØ± ÛŒØ§Ø¯ Ø¨Ú¯ÛŒØ±ÛŒØŸ",
+    answers: [
+      {
+        text: "Ø¨Ø§ Ø¯ÛŒØ¯Ù† ÙˆÛŒØ¯ÛŒÙˆ Ùˆ Ø³Ø§Ø®ØªÙ† Ù¾Ø±ÙˆÚ˜Ù‡",
+        profile: "visual",
+      },
+      {
+        text: "Ø¨Ø§ Ø®ÙˆÙ†Ø¯Ù† Ù…Ø³ØªÙ†Ø¯Ø§Øª Ùˆ ØªÙ…Ø±ÛŒÙ†",
+        profile: "textual",
+      },
+      {
+        text: "Ø¨Ø§ Ø­Ù„ ØªÙ…Ø±ÛŒÙ† Ùˆ Ú†Ø§Ù„Ø´",
+        profile: "interactive",
+      },
+    ],
+  },
 ];
 
 
@@ -10686,7 +10697,6 @@ import { getSkillStatus } from "../engine/skillStatus";
 // Ú†Ø±Ø§ Ø§ÛŒÙ†Ø¬Ø§ Ùˆ Ù†Ù‡ ØªÙˆÛŒ engineØŸ Ú†ÙˆÙ† label Ùˆ className
 // Ù…Ø±Ø¨ÙˆØ· Ø¨Ù‡ UI Ù‡Ø³ØªÙ†ØŒ Ù†Ù‡ business logic.
 
-const orderedSkills = roadmap.flatMap((stage) => stage.skills || []);
 
 const STATUS_LABELS = {
     completed: {
@@ -10730,6 +10740,8 @@ export function useSkillData() {
     const skill = allSkills.find(
         (item) => String(item.id) === String(id)
     );
+    const orderedSkills = roadmap.flatMap((stage) => stage.skills || []);
+
 
     const skillProgress = Number(
         progress?.[skill?.id] || 0
@@ -11944,6 +11956,17 @@ export default function MainLayout() {
 
 
 ============================================================
+FILE: C:\Users\rose\desktop\devcompass\src\pages\Achievements.jsx
+============================================================
+
+export default function Achievements(){
+    return(
+        <h1 className="text-3xl text-white p-8">Coming Soon...</h1>
+    )
+}
+
+
+============================================================
 FILE: C:\Users\rose\desktop\devcompass\src\pages\Dashboard.jsx
 ============================================================
 
@@ -12729,7 +12752,7 @@ import Scene from "../components/ui/Scene";
 
 export default function Login() {
     const navigate = useNavigate();
-    const { login } = useContext(AuthContext);
+    const { login, updateUser } = useContext(AuthContext);
 
     const [form, setForm] = useState({
         email: "",
@@ -12755,9 +12778,47 @@ export default function Login() {
         setLoading(true);
 
         try {
-            await login(form.email, form.password);
+            const loggedUser = await login(form.email, form.password);
+
+            // Ø§Ú¯Ù‡ Ú©Ø§Ø±Ø¨Ø± Ù‚Ø¨Ù„ Ø§Ø² loginØŒ quiz Ø¯Ø§Ø¯Ù‡ Ùˆ Ù‡Ø¯Ù Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ø±Ø¯Ù‡ØŒ
+            // Ø­Ø§Ù„Ø§ roadmap_goal Ø±Ùˆ Ø°Ø®ÛŒØ±Ù‡ Ú©Ù†
+            const pendingGoal = localStorage.getItem("pending_roadmap_goal");
+
+            if (pendingGoal && loggedUser?.id) {
+                try {
+                    const response = await fetch(
+                        "http://localhost/devcompass-api/api/roadmap.php",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                user_id: Number(loggedUser.id),
+                                roadmap_goal: pendingGoal,
+                            }),
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        // Ù…Ù‡Ù…: user state Ø±Ùˆ Ø¨Ø§ roadmap_goal Ø¢Ù¾Ø¯ÛŒØª Ú©Ù†
+                        // ØªØ§ QuizContext Ø¨ÙÙ‡Ù…Ù‡ Ùˆ roadmap Ø±Ùˆ Ø¨Ø³Ø§Ø²Ù‡
+                        updateUser({ roadmap_goal: pendingGoal });
+                    }
+                } catch (roadmapError) {
+                    // Ø§Ú¯Ù‡ Ø°Ø®ÛŒØ±Ù‡â€ŒÛŒ roadmap Ø®Ø·Ø§ Ø¯Ø§Ø¯ØŒ ÙˆÙ„ÛŒ login Ù…ÙˆÙÙ‚ Ø¨ÙˆØ¯Ù‡ØŒ
+                    // Ú©Ø§Ø±Ø¨Ø± Ø±Ùˆ Ù…ØªÙˆÙ‚Ù Ù†Ú©Ù† â€” Ø¨Ø°Ø§Ø± Ø¨Ø±Ù‡ dashboard
+                    console.error("Failed to save pending roadmap:", roadmapError);
+                }
+
+                // Ù¾Ø§Ú© Ú©Ø±Ø¯Ù† pending
+                localStorage.removeItem("pending_roadmap_goal");
+            }
 
             navigate("/dashboard");
+
         } catch (error) {
             setError(error.message || "ÙˆØ±ÙˆØ¯ Ù†Ø§Ù…ÙˆÙÙ‚ Ø¨ÙˆØ¯");
         } finally {
@@ -12874,7 +12935,7 @@ export default function Login() {
                         </span>
 
                         <Link
-                            to="/register"
+                            to="/"
                             className="mr-2 font-bold text-cyan-400 hover:text-cyan-300"
                         >
                             Ø³Ø§Ø®Øª Ø­Ø³Ø§Ø¨
@@ -12885,7 +12946,6 @@ export default function Login() {
         </>
     );
 }
-
 
 
 ============================================================
@@ -13806,7 +13866,7 @@ import Scene from "../components/ui/Scene";
 
 export default function Register() {
     const navigate = useNavigate();
-    const { register } = useContext(AuthContext);
+    const { register, updateUser } = useContext(AuthContext);
 
 
     const [form, setForm] = useState({
@@ -13834,13 +13894,51 @@ export default function Register() {
         setLoading(true);
 
         try {
-            await register(
+            const newUser = await register(
                 form.username,
                 form.email,
                 form.password
             );
 
-            navigate("/quiz");
+            // Ø§Ú¯Ù‡ Ú©Ø§Ø±Ø¨Ø± Ù‚Ø¨Ù„ Ø§Ø² registerØŒ quiz Ø¯Ø§Ø¯Ù‡ Ùˆ Ù‡Ø¯Ù Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ø±Ø¯Ù‡ØŒ
+            // Ø­Ø§Ù„Ø§ roadmap_goal Ø±Ùˆ Ø°Ø®ÛŒØ±Ù‡ Ú©Ù†
+            const pendingGoal = localStorage.getItem("pending_roadmap_goal");
+
+            if (pendingGoal && newUser?.id) {
+                try {
+                    const response = await fetch(
+                        "http://localhost/devcompass-api/api/roadmap.php",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                user_id: Number(newUser.id),
+                                roadmap_goal: pendingGoal,
+                            }),
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        // Ù…Ù‡Ù…: user state Ø±Ùˆ Ø¨Ø§ roadmap_goal Ø¢Ù¾Ø¯ÛŒØª Ú©Ù†
+                        // ØªØ§ QuizContext Ø¨ÙÙ‡Ù…Ù‡ Ùˆ roadmap Ø±Ùˆ Ø¨Ø³Ø§Ø²Ù‡
+                        updateUser({ roadmap_goal: pendingGoal });
+                    }
+                } catch (roadmapError) {
+                    // Ø§Ú¯Ù‡ Ø°Ø®ÛŒØ±Ù‡â€ŒÛŒ roadmap Ø®Ø·Ø§ Ø¯Ø§Ø¯ØŒ ÙˆÙ„ÛŒ Ø«Ø¨Øªâ€ŒÙ†Ø§Ù… Ù…ÙˆÙÙ‚ Ø¨ÙˆØ¯Ù‡ØŒ
+                    // Ú©Ø§Ø±Ø¨Ø± Ø±Ùˆ Ù…ØªÙˆÙ‚Ù Ù†Ú©Ù† â€” Ø¨Ø°Ø§Ø± Ø¨Ø±Ù‡ dashboard
+                    console.error("Failed to save pending roadmap:", roadmapError);
+                }
+
+                // Ù¾Ø§Ú© Ú©Ø±Ø¯Ù† pending
+                localStorage.removeItem("pending_roadmap_goal");
+            }
+
+            navigate("/dashboard");
+
         } catch (error) {
             setError(error.message || "Ø«Ø¨Øªâ€ŒÙ†Ø§Ù… Ù†Ø§Ù…ÙˆÙÙ‚ Ø¨ÙˆØ¯");
         } finally {
@@ -14009,8 +14107,6 @@ import {
 import QuizContext from "../context/QuizContext";
 import Scene from "../components/ui/Scene";
 
-import AuthContext from "../context/AuthContext";
-
 // ==============================================
 // RankItem
 // ==============================================
@@ -14129,12 +14225,8 @@ export default function Result() {
 
     const navigate = useNavigate();
 
-    const { user, updateUser } =
-        useContext(AuthContext);
+    const { result } = useContext(QuizContext);
 
-    // ...
-
-    const { result, skills } = useContext(QuizContext);
     // ==========================================
     // STATE
     // ==========================================
@@ -14192,51 +14284,20 @@ export default function Result() {
         bestResult.id;
 
     // ==========================================
-    // Generate Roadmap
+    // Continue to register
     // ==========================================
 
-    async function handleRoadmap(goal) {
+    function handleContinue(goal) {
         try {
-            // 1. Validate user
-            if (!user?.id) {
-                throw new Error("Ú©Ø§Ø±Ø¨Ø± ÙˆØ§Ø±Ø¯ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª");
-            }
+            // Ú©Ø§Ø±Ø¨Ø± Ù„Ø§Ú¯ÛŒÙ† Ù†ÛŒØ³Øª â†’ goal Ø±Ùˆ Ù…ÙˆÙ‚Øª Ø°Ø®ÛŒØ±Ù‡ Ú©Ù†
+            // Ø¨Ø¹Ø¯ Ø§Ø² register/loginØŒ Ø®ÙˆØ¯Ú©Ø§Ø± Ø§Ø¹Ù…Ø§Ù„ Ù…ÛŒâ€ŒØ´Ù‡
+            localStorage.setItem("pending_roadmap_goal", goal);
 
-            // 2. Validate skills
-            if (!Array.isArray(skills) || skills.length === 0) {
-                throw new Error("Ù„ÛŒØ³Øª Ù…Ù‡Ø§Ø±Øªâ€ŒÙ‡Ø§ Ù‡Ù†ÙˆØ² Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù†Ø´Ø¯Ù‡ Ø§Ø³Øª");
-            }
-
-            // 3. Save roadmap goal on server
-            const response = await fetch(
-                "http://localhost/devcompass-api/api/roadmap.php",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        user_id: Number(user.id),
-                        roadmap_goal: goal,
-                    }),
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || "Ø®Ø·Ø§ Ø¯Ø± Ø°Ø®ÛŒØ±Ù‡ Ù…Ø³ÛŒØ±");
-            }
-
-            // 4. Update user state
-            // QuizContext Ø§Ø² Ø§ÛŒÙ† ØªØºÛŒÛŒØ± Ù…Ø·Ù„Ø¹ Ù…ÛŒâ€ŒØ´Ù‡ Ùˆ Ø®ÙˆØ¯Ø´ roadmap Ø±Ùˆ Ù…ÛŒâ€ŒØ³Ø§Ø²Ù‡
-            updateUser({ roadmap_goal: goal });
-
-            // 5. Navigate
-            navigate("/dashboard");
+            // navigate Ø¨Ù‡ register
+            navigate("/register");
 
         } catch (error) {
-            console.error("Failed to generate roadmap:", error);
+            console.error("Failed to save pending goal:", error);
         }
     }
 
@@ -14405,15 +14466,14 @@ export default function Result() {
 
                         <button
                             onClick={() =>
-                                handleRoadmap(
+                                handleContinue(
                                     roadmapGoal
                                 )
                             }
                             className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-cyan-400 text-black font-bold text-sm hover:bg-cyan-300 transition-all duration-300 group"
                         >
 
-                            Ù…Ø´Ø§Ù‡Ø¯Ù‡ Ù†Ù‚Ø´Ù‡ Ø±Ø§Ù‡{" "}
-                            {bestResult.id}
+                            Ø§Ø¯Ø§Ù…Ù‡ Ø¨Ø±Ø§ÛŒ Ø³Ø§Ø®Øª Ù…Ø³ÛŒØ±
 
                             <span className="group-hover:translate-x-1 transition-transform">
                                 â†’
