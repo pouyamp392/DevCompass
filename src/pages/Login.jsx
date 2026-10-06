@@ -7,7 +7,7 @@ import Scene from "../components/ui/Scene";
 
 export default function Login() {
     const navigate = useNavigate();
-    const { login } = useContext(AuthContext);
+    const { login, updateUser } = useContext(AuthContext);
 
     const [form, setForm] = useState({
         email: "",
@@ -33,9 +33,47 @@ export default function Login() {
         setLoading(true);
 
         try {
-            await login(form.email, form.password);
+            const loggedUser = await login(form.email, form.password);
+
+            // اگه کاربر قبل از login، quiz داده و هدف انتخاب کرده،
+            // حالا roadmap_goal رو ذخیره کن
+            const pendingGoal = localStorage.getItem("pending_roadmap_goal");
+
+            if (pendingGoal && loggedUser?.id) {
+                try {
+                    const response = await fetch(
+                        "http://localhost/devcompass-api/api/roadmap.php",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                user_id: Number(loggedUser.id),
+                                roadmap_goal: pendingGoal,
+                            }),
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        // مهم: user state رو با roadmap_goal آپدیت کن
+                        // تا QuizContext بفهمه و roadmap رو بسازه
+                        updateUser({ roadmap_goal: pendingGoal });
+                    }
+                } catch (roadmapError) {
+                    // اگه ذخیره‌ی roadmap خطا داد، ولی login موفق بوده،
+                    // کاربر رو متوقف نکن — بذار بره dashboard
+                    console.error("Failed to save pending roadmap:", roadmapError);
+                }
+
+                // پاک کردن pending
+                localStorage.removeItem("pending_roadmap_goal");
+            }
 
             navigate("/dashboard");
+
         } catch (error) {
             setError(error.message || "ورود ناموفق بود");
         } finally {
@@ -152,7 +190,7 @@ export default function Login() {
                         </span>
 
                         <Link
-                            to="/register"
+                            to="/"
                             className="mr-2 font-bold text-cyan-400 hover:text-cyan-300"
                         >
                             ساخت حساب

@@ -10,8 +10,6 @@ import {
 import QuizContext from "../context/QuizContext";
 import Scene from "../components/ui/Scene";
 
-import AuthContext from "../context/AuthContext";
-
 // ==============================================
 // RankItem
 // ==============================================
@@ -130,12 +128,8 @@ export default function Result() {
 
     const navigate = useNavigate();
 
-    const { user, updateUser } =
-        useContext(AuthContext);
+    const { result } = useContext(QuizContext);
 
-    // ...
-
-    const { result, skills } = useContext(QuizContext);
     // ==========================================
     // STATE
     // ==========================================
@@ -193,51 +187,20 @@ export default function Result() {
         bestResult.id;
 
     // ==========================================
-    // Generate Roadmap
+    // Continue to register
     // ==========================================
 
-    async function handleRoadmap(goal) {
+    function handleContinue(goal) {
         try {
-            // 1. Validate user
-            if (!user?.id) {
-                throw new Error("کاربر وارد نشده است");
-            }
+            // کاربر لاگین نیست → goal رو موقت ذخیره کن
+            // بعد از register/login، خودکار اعمال می‌شه
+            localStorage.setItem("pending_roadmap_goal", goal);
 
-            // 2. Validate skills
-            if (!Array.isArray(skills) || skills.length === 0) {
-                throw new Error("لیست مهارت‌ها هنوز بارگذاری نشده است");
-            }
-
-            // 3. Save roadmap goal on server
-            const response = await fetch(
-                "http://localhost/devcompass-api/api/roadmap.php",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        user_id: Number(user.id),
-                        roadmap_goal: goal,
-                    }),
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || "خطا در ذخیره مسیر");
-            }
-
-            // 4. Update user state
-            // QuizContext از این تغییر مطلع می‌شه و خودش roadmap رو می‌سازه
-            updateUser({ roadmap_goal: goal });
-
-            // 5. Navigate
-            navigate("/dashboard");
+            // navigate به register
+            navigate("/register");
 
         } catch (error) {
-            console.error("Failed to generate roadmap:", error);
+            console.error("Failed to save pending goal:", error);
         }
     }
 
@@ -406,15 +369,14 @@ export default function Result() {
 
                         <button
                             onClick={() =>
-                                handleRoadmap(
+                                handleContinue(
                                     roadmapGoal
                                 )
                             }
                             className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-cyan-400 text-black font-bold text-sm hover:bg-cyan-300 transition-all duration-300 group"
                         >
 
-                            مشاهده نقشه راه{" "}
-                            {bestResult.id}
+                            ادامه برای ساخت مسیر
 
                             <span className="group-hover:translate-x-1 transition-transform">
                                 →

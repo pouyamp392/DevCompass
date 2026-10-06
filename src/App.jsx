@@ -5,6 +5,7 @@ import Result from "./pages/Result";
 import Roadmap from "./pages/Roadmap";
 import Skill from "./pages/Skill";
 import Dashboard from "./pages/Dashboard";
+import Achievements from "./pages/Achievements";
 import MainLayout from "./layouts/MainLayout";
 import Skills from "./pages/Skills";
 import Register from "./pages/Register";
@@ -34,6 +35,7 @@ export default function App() {
                     <Route path="/skill/:id" element={<Skill />} />
                     <Route path="/skills" element={<Skills />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/achievements" element={<Achievements />} />
                 </Route>
             </Route>
 

@@ -7,7 +7,7 @@ import Scene from "../components/ui/Scene";
 
 export default function Register() {
     const navigate = useNavigate();
-    const { register } = useContext(AuthContext);
+    const { register, updateUser } = useContext(AuthContext);
 
 
     const [form, setForm] = useState({
@@ -35,13 +35,51 @@ export default function Register() {
         setLoading(true);
 
         try {
-            await register(
+            const newUser = await register(
                 form.username,
                 form.email,
                 form.password
             );
 
-            navigate("/quiz");
+            // اگه کاربر قبل از register، quiz داده و هدف انتخاب کرده،
+            // حالا roadmap_goal رو ذخیره کن
+            const pendingGoal = localStorage.getItem("pending_roadmap_goal");
+
+            if (pendingGoal && newUser?.id) {
+                try {
+                    const response = await fetch(
+                        "http://localhost/devcompass-api/api/roadmap.php",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                user_id: Number(newUser.id),
+                                roadmap_goal: pendingGoal,
+                            }),
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        // مهم: user state رو با roadmap_goal آپدیت کن
+                        // تا QuizContext بفهمه و roadmap رو بسازه
+                        updateUser({ roadmap_goal: pendingGoal });
+                    }
+                } catch (roadmapError) {
+                    // اگه ذخیره‌ی roadmap خطا داد، ولی ثبت‌نام موفق بوده،
+                    // کاربر رو متوقف نکن — بذار بره dashboard
+                    console.error("Failed to save pending roadmap:", roadmapError);
+                }
+
+                // پاک کردن pending
+                localStorage.removeItem("pending_roadmap_goal");
+            }
+
+            navigate("/dashboard");
+
         } catch (error) {
             setError(error.message || "ثبت‌نام ناموفق بود");
         } finally {
