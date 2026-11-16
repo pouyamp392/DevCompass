@@ -13,9 +13,6 @@ import generateStages from "../engine/generateStages";
 
 const QuizContext = createContext();
 
-// ========================================
-// NORMALIZE PROGRESS
-// ========================================
 function normalizeProgress(rawProgress) {
   if (!rawProgress || typeof rawProgress !== "object") {
     return {};
@@ -33,21 +30,23 @@ function normalizeProgress(rawProgress) {
 export function QuizProvider({ children }) {
   const { user, updateUser } = useContext(AuthContext);
 
-  // ========================================
-  // STATE
-  // ========================================
   const [result, setResult] = useState([]);
   const [roadmap, setRoadmap] = useState([]);
   const [progress, setProgress] = useState({});
 
-  // Skills State
   const [skills, setSkills] = useState([]);
   const [skillsLoading, setSkillsLoading] = useState(true);
   const [skillsError, setSkillsError] = useState(null);
 
-  // ========================================
-  // LOAD USER PROGRESS
-  // ========================================
+  const [userProfile, setUserProfile] = useState(() => {
+    try {
+      const raw = localStorage.getItem("quiz_user_profile");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+
   useEffect(() => {
     if (!user?.id) {
       setProgress({});
@@ -86,9 +85,6 @@ export function QuizProvider({ children }) {
     };
   }, [user?.id]);
 
-  // ========================================
-  // LOAD ALL SKILLS
-  // ========================================
   useEffect(() => {
     let cancelled = false;
 
@@ -131,11 +127,6 @@ export function QuizProvider({ children }) {
     };
   }, []);
 
-  // ========================================
-  // GENERATE USER ROADMAP
-  // ========================================
-  // roadmap از روی user.roadmap_goal و skills محاسبه می‌شه.
-  // نیازی به fetch از سرور نیست — AuthContext منبع حقیقته.
   useEffect(() => {
     if (skillsLoading || skills.length === 0) {
       setRoadmap([]);
@@ -149,15 +140,12 @@ export function QuizProvider({ children }) {
       return;
     }
 
-    const roadmapSkills = generateRoadmap(goal, skills);
+    const roadmapSkills = generateRoadmap(goal, skills, userProfile);
     const generatedRoadmap = generateStages(roadmapSkills);
 
     setRoadmap(generatedRoadmap);
-  }, [user?.roadmap_goal, skills, skillsLoading]);
+  }, [user?.roadmap_goal, skills, skillsLoading, userProfile]);
 
-  // ========================================
-  // ROADMAP PROGRESS CALCULATIONS
-  // ========================================
   const progressData = useMemo(() => {
     const allRoadmapSkills = roadmap.flatMap((stage) => stage.skills || []);
     const totalSkills = allRoadmapSkills.length;
@@ -182,9 +170,6 @@ export function QuizProvider({ children }) {
     };
   }, [roadmap, progress]);
 
-  // ========================================
-  // UPDATE SKILL PROGRESS
-  // ========================================
   const updateProgress = useCallback(
     async (skillId, value) => {
       const userId = Number(user?.id);
@@ -193,7 +178,7 @@ export function QuizProvider({ children }) {
 
       if (!userId || !numericSkillId) {
         throw new Error(
-          `شناسه نامعتبر است: user_id=${user?.id}, skill_id=${skillId}`
+          `شماره نامعتبر است: user_id=${user?.id}, skill_id=${skillId}`
         );
       }
 
@@ -226,13 +211,11 @@ export function QuizProvider({ children }) {
         throw new Error(data.message || "خطا در ذخیره پیشرفت");
       }
 
-      // Update local progress state
       setProgress((previous) => ({
         ...previous,
         [numericSkillId]: numericValue,
       }));
 
-      // Update user state if API returned new user info
       if (data.data?.user) {
         updateUser(data.data.user);
       }
@@ -242,9 +225,6 @@ export function QuizProvider({ children }) {
     [user?.id, updateUser]
   );
 
-  // ========================================
-  // MEMOIZED CONTEXT VALUE
-  // ========================================
   const contextValue = useMemo(
     () => ({
       result,
@@ -263,6 +243,8 @@ export function QuizProvider({ children }) {
       completedSkillsCount: progressData.completedSkillsCount,
       roadmapProgress: progressData.roadmapProgress,
       updateProgress,
+      userProfile,
+      setUserProfile,
     }),
     [
       result,
@@ -273,6 +255,7 @@ export function QuizProvider({ children }) {
       progress,
       progressData,
       updateProgress,
+      userProfile,
     ]
   );
 
@@ -283,9 +266,6 @@ export function QuizProvider({ children }) {
   );
 }
 
-// ========================================
-// CUSTOM HOOK
-// ========================================
 export function useQuiz() {
   const context = useContext(QuizContext);
   if (!context) {

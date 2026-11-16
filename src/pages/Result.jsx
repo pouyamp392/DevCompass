@@ -411,7 +411,7 @@ function ScrollHint({ count }) {
 
 export default function Result() {
     const navigate = useNavigate();
-    const { result } = useContext(QuizContext);
+    const { result, userProfile: contextProfile } = useContext(QuizContext);
 
     const [expandedId, setExpandedId] = useState(null);
     const [selectedGoal, setSelectedGoal] = useState(null);

@@ -41,7 +41,7 @@ function buildCategoryGroups(questions) {
 
 export default function Quiz() {
     const navigate = useNavigate();
-    const { setResult } = useContext(QuizContext);
+    const { setResult, setUserProfile } = useContext(QuizContext);
 
     // screens: "welcome" | "question" | "transition"
     const [screen, setScreen] = useState("welcome");
@@ -111,10 +111,11 @@ export default function Quiz() {
 
         localStorage.setItem("quiz_user_profile", JSON.stringify(userProfile));
 
+        setUserProfile(userProfile);
+
         setResult(result);
         navigate("/result");
     }
-
     // ========================================
     // CONTINUE FROM TRANSITION
     // ========================================
