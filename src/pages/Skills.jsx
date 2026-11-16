@@ -1,11 +1,11 @@
 import Scene from "../components/ui/Scene";
 import { useSkills } from "../hooks/useSkills";
 
-import SkillsHero from "../components/Skills/SkillsHero";
-import SkillsContinue from "../components/Skills/SkillsContinue";
-import SkillsSearchBar from "../components/Skills/SkillsSearchBar";
-import SkillsCategory from "../components/Skills/SkillsCategory";
-import SkillsEmptyState from "../components/Skills/SkillsEmptyState";
+import SkillsHero from "../components/skills/SkillsHero";
+import SkillsContinue from "../components/skills/SkillsContinue";
+import SkillsSearchBar from "../components/skills/SkillsSearchBar";
+import SkillsCategory from "../components/skills/SkillsCategory";
+import SkillsEmptyState from "../components/skills/SkillsEmptyState";
 
 export default function Skills() {
     const {
