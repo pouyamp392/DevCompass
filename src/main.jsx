@@ -1,0 +1,20 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import { BrowserRouter } from "react-router-dom";
+import "./index.css";
+import { QuizProvider } from "./context/QuizContext";
+import { AuthProvider } from "./context/AuthContext";
+ReactDOM.createRoot(document.getElementById("root")).render(
+    <AuthProvider>
+        <QuizProvider>
+            {/* <React.StrictMode> */}
+            <BrowserRouter>
+                <App />
+            </BrowserRouter>
+            {/* </React.StrictMode> */}
+        </QuizProvider>
+    </AuthProvider>
+
+
+);

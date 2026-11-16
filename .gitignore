@@ -1,2 +1,5 @@
 config/database.php
-.env.idea/ 
+.env
+.idea/
+node_modules/
+dist/
