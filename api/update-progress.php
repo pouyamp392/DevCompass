@@ -223,6 +223,7 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
+    error_log("Update Progress Error: " . $e->getMessage());
     if ($conn->connect_errno === 0) {
         $conn->rollback();
     }
