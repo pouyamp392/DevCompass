@@ -33,6 +33,7 @@ jobs:
           cp -r api helpers index.php deploy/
 
           cat > deploy/.htaccess <<'EOF'
+          DirectoryIndex index.html index.php
           Options -Indexes
           RewriteEngine On
           RewriteCond %{REQUEST_FILENAME} !-f
