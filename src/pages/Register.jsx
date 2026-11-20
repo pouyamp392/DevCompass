@@ -2,6 +2,8 @@ import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserPlus, Mail, Lock, User, ArrowLeft } from "lucide-react";
 
+import { API_BASE_URL } from "../config";
+
 import AuthContext from "../context/AuthContext";
 import Scene from "../components/ui/Scene";
 
@@ -48,7 +50,7 @@ export default function Register() {
             if (pendingGoal && newUser?.id) {
                 try {
                     const response = await fetch(
-                        "http://localhost/devcompass-api/api/roadmap.php",
+                        `${API_BASE_URL}/api/roadmap.php`,
                         {
                             method: "POST",
                             headers: {

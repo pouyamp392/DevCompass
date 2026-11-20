@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState, useCallback } from "react";
-
+import { API_BASE_URL } from "../config";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -66,7 +66,7 @@ export function AuthProvider({ children }) {
   // ========================================
   async function register(username, email, password) {
     const response = await fetch(
-      "http://localhost/devcompass-api/api/register.php",
+      `${API_BASE_URL}/api/register.php`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -92,7 +92,7 @@ export function AuthProvider({ children }) {
   // ========================================
   async function login(email, password) {
     const response = await fetch(
-      "http://localhost/devcompass-api/api/login.php",
+      `${API_BASE_URL}/api/login.php`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -121,7 +121,7 @@ export function AuthProvider({ children }) {
     }
 
     const response = await fetch(
-      "http://localhost/devcompass-api/api/update-profile.php",
+      `${API_BASE_URL}/api/update-profile.php`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

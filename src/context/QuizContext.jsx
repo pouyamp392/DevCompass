@@ -7,6 +7,7 @@ import {
   useCallback,
 } from "react";
 
+import { API_BASE_URL } from "../config";
 import AuthContext from "./AuthContext";
 import generateRoadmap from "../engine/generateRoadmap";
 import generateStages from "../engine/generateStages";
@@ -58,7 +59,7 @@ export function QuizProvider({ children }) {
     async function loadProgress() {
       try {
         const response = await fetch(
-          `http://localhost/devcompass-api/api/progress.php?user_id=${user.id}`
+          `${API_BASE_URL}/api/progress.php?user_id=${user.id}`
         );
 
         const data = await response.json();
@@ -94,7 +95,7 @@ export function QuizProvider({ children }) {
         setSkillsError(null);
 
         const response = await fetch(
-          "http://localhost/devcompass-api/api/skills.php"
+          `${API_BASE_URL}/api/skills.php`
         );
 
         const data = await response.json();
@@ -191,7 +192,7 @@ export function QuizProvider({ children }) {
       }
 
       const response = await fetch(
-        "http://localhost/devcompass-api/api/update-progress.php",
+        `${API_BASE_URL}/api/update-progress.php`,
         {
           method: "POST",
           headers: {
